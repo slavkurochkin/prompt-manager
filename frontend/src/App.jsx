@@ -896,6 +896,7 @@ function App() {
           }}
           loadedPrompt={promptToLoad}
           key={constructorKey} // Force remount when loading a new prompt
+          onPromptSaved={fetchPrompts} // Refresh prompts list after saving
         />
         {toast && (
           <div className={`toast ${toast.type}`}>

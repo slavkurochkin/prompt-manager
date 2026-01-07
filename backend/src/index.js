@@ -1,6 +1,7 @@
 const express = require('express');
 const cors = require('cors');
 const promptsRouter = require('./routes/prompts');
+const notesRouter = require('./routes/notes');
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -16,6 +17,7 @@ app.get('/health', (req, res) => {
 
 // API Routes
 app.use('/api/prompts', promptsRouter);
+app.use('/api/notes', notesRouter);
 
 // 404 handler
 app.use((req, res) => {

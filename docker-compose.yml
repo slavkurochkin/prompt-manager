@@ -12,7 +12,7 @@ services:
       - postgres_data:/var/lib/postgresql/data
       - ./backend/src/db/init.sql:/docker-entrypoint-initdb.d/init.sql
     ports:
-      - "5432:5432"
+      - "5433:5432"
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U promptuser -d promptdb"]
       interval: 5s
@@ -57,4 +57,5 @@ services:
 
 volumes:
   postgres_data:
+
 

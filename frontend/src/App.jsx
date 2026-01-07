@@ -29,8 +29,12 @@ import {
   Tag,
   Plus,
   Filter,
-  Gauge
+  Gauge,
+  BookOpen,
+  Code
 } from 'lucide-react'
+import Notes from './Notes'
+import RequirementsConstructor from './RequirementsConstructor'
 
 // Prompt confidence/quality analyzer
 // Based on prompt engineering best practices + EmotionPrompt research (https://arxiv.org/pdf/2307.11760)
@@ -352,6 +356,7 @@ import { jsPDF } from 'jspdf'
 const API_BASE = '/api/prompts'
 
 function App() {
+  const [currentPage, setCurrentPage] = useState('prompts') // 'prompts', 'notes', or 'requirements'
   const [prompts, setPrompts] = useState([])
   const [title, setTitle] = useState('')
   const [content, setContent] = useState('')
@@ -855,6 +860,36 @@ function App() {
     showToast('Exported to PDF successfully!')
   }
 
+  // If on Notes page, render Notes component
+  if (currentPage === 'notes') {
+    return (
+      <>
+        <Notes onNavigateBack={() => setCurrentPage('prompts')} />
+        {toast && (
+          <div className={`toast ${toast.type}`}>
+            {toast.type === 'success' ? <CheckCircle size={16} /> : <AlertCircle size={16} />}
+            <span>{toast.message}</span>
+          </div>
+        )}
+      </>
+    )
+  }
+
+  // If on Requirements Constructor page, render RequirementsConstructor component
+  if (currentPage === 'requirements') {
+    return (
+      <>
+        <RequirementsConstructor onNavigateBack={() => setCurrentPage('prompts')} />
+        {toast && (
+          <div className={`toast ${toast.type}`}>
+            {toast.type === 'success' ? <CheckCircle size={16} /> : <AlertCircle size={16} />}
+            <span>{toast.message}</span>
+          </div>
+        )}
+      </>
+    )
+  }
+
   return (
     <div className="app">
       <div className="app-layout">
@@ -867,6 +902,22 @@ function App() {
             </div>
             <h1>Prompt Library</h1>
             <p>Store and manage your AI prompts in one place</p>
+            <div className="header-nav-buttons">
+              <button 
+                className="btn-notes-nav"
+                onClick={() => setCurrentPage('requirements')}
+              >
+                <Code size={16} />
+                Requirements Constructor
+              </button>
+              <button 
+                className="btn-notes-nav"
+                onClick={() => setCurrentPage('notes')}
+              >
+                <BookOpen size={16} />
+                Research Notes
+              </button>
+            </div>
           </header>
 
           {/* Create Form */}

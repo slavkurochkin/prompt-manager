@@ -47,3 +47,43 @@ INSERT INTO prompts (title, content, model) VALUES
     ('Technical Documentation', 'Create clear, concise technical documentation for the following feature. Include usage examples and API references.', 'Claude 3.5'),
     ('Debug Helper', 'Help me debug this issue. Analyze the error message and suggest potential fixes with explanations.', 'GPT-4o');
 
+-- ============================================
+-- NOTES TABLE (Apple Notes-like feature)
+-- ============================================
+
+CREATE TABLE IF NOT EXISTS notes (
+    id SERIAL PRIMARY KEY,
+    title VARCHAR(255) NOT NULL DEFAULT 'Untitled',
+    content TEXT DEFAULT '',
+    color VARCHAR(20) DEFAULT 'default',
+    is_pinned BOOLEAN DEFAULT FALSE,
+    folder VARCHAR(100),
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Create indexes for notes
+CREATE INDEX IF NOT EXISTS idx_notes_created_at ON notes(created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_notes_is_pinned ON notes(is_pinned DESC);
+CREATE INDEX IF NOT EXISTS idx_notes_folder ON notes(folder);
+
+-- Add columns if they don't exist (for existing databases)
+DO $$ 
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM information_schema.tables 
+        WHERE table_name = 'notes'
+    ) THEN
+        CREATE TABLE notes (
+            id SERIAL PRIMARY KEY,
+            title VARCHAR(255) NOT NULL DEFAULT 'Untitled',
+            content TEXT DEFAULT '',
+            color VARCHAR(20) DEFAULT 'default',
+            is_pinned BOOLEAN DEFAULT FALSE,
+            folder VARCHAR(100),
+            created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+            updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+        );
+    END IF;
+END $$;
+

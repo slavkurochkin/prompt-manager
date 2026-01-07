@@ -526,6 +526,7 @@ function RequirementsConstructor({ onNavigateBack, loadedPrompt, onPromptSaved }
   // Section collapse state (all collapsed by default)
   const [expandedSections, setExpandedSections] = useState({
     technicalArchitecture: false,
+    designStyles: false,
     productRequirements: false,
     businessRules: false,
     additionalRequirements: false
@@ -704,30 +705,6 @@ function RequirementsConstructor({ onNavigateBack, loadedPrompt, onPromptSaved }
               setModelValidation('')
               setCustomModelValidation(value)
             }
-          } else if (key === 'Design Style') {
-            if (DESIGN_STYLES.includes(value)) {
-              setDesignStyle(value)
-              setCustomDesignStyle('')
-            } else {
-              setDesignStyle('')
-              setCustomDesignStyle(value)
-            }
-          } else if (key === 'Icon Library') {
-            if (ICON_LIBRARIES.includes(value)) {
-              setIconLibrary(value)
-              setCustomIconLibrary('')
-            } else {
-              setIconLibrary('')
-              setCustomIconLibrary(value)
-            }
-          } else if (key === 'UI Framework') {
-            if (UI_FRAMEWORKS.includes(value)) {
-              setUiFramework(value)
-              setCustomUiFramework('')
-            } else {
-              setUiFramework('')
-              setCustomUiFramework(value)
-            }
           } else if (key === 'Chart Library') {
             if (CHART_LIBRARIES.includes(value)) {
               setChartLibrary(value)
@@ -748,6 +725,70 @@ function RequirementsConstructor({ onNavigateBack, loadedPrompt, onPromptSaved }
           // Note: Fields that don't match any pattern will be preserved in the prompt
           // but won't populate form fields. This is intentional to support custom fields.
         })
+      } else if (header === '## Non-Functional Requirements') {
+        // Extract the content after the header
+        const content = lines.slice(1).join('\n').trim()
+        setNonFunctionalRequirements(content)
+      } else if (header === '## Business Rules') {
+        const content = lines.slice(1).join('\n').trim()
+        setBusinessRules(content)
+      } else if (header === '## Additional Requirements') {
+        const content = lines.slice(1).join('\n').trim()
+        setAdditionalRequirements(content)
+      } else if (header === '## User Stories') {
+        const content = lines.slice(1).join('\n').trim()
+        setUserStories(content)
+      } else if (header === '## Product Requirements') {
+        const content = lines.slice(1).join('\n').trim()
+        setProductRequirements(content)
+      } else if (header === '## Acceptance Criteria') {
+        const content = lines.slice(1).join('\n').trim()
+        setAcceptanceCriteria(content)
+      } else if (header === '## Design Styles') {
+        // Design Styles section can contain: design styles (list), Icon Library, UI Framework
+        const contentLines = lines.slice(1).map(l => l.trim()).filter(l => l)
+        
+        const validStyles = []
+        const customStyles = []
+        
+        contentLines.forEach(line => {
+          // Check if it's a key-value pair (Icon Library: or UI Framework:)
+          const colonIndex = line.indexOf(':')
+          if (colonIndex !== -1) {
+            const key = line.substring(0, colonIndex).trim()
+            const value = line.substring(colonIndex + 1).trim()
+            
+            if (key === 'Icon Library') {
+              if (ICON_LIBRARIES.includes(value)) {
+                setIconLibrary(value)
+                setCustomIconLibrary('')
+              } else {
+                setIconLibrary('')
+                setCustomIconLibrary(value)
+              }
+            } else if (key === 'UI Framework') {
+              if (UI_FRAMEWORKS.includes(value)) {
+                setUiFramework(value)
+                setCustomUiFramework('')
+              } else {
+                setUiFramework('')
+                setCustomUiFramework(value)
+              }
+            }
+          } else {
+            // It's a design style (plain text, no colon)
+            if (DESIGN_STYLES.includes(line)) {
+              validStyles.push(line)
+            } else {
+              customStyles.push(line)
+            }
+          }
+        })
+        
+        if (validStyles.length > 0 || customStyles.length > 0) {
+          setDesignStyles(validStyles)
+          setCustomDesignStyle(customStyles.join(', ') || '')
+        }
       }
     })
   }, [])
@@ -768,6 +809,12 @@ function RequirementsConstructor({ onNavigateBack, loadedPrompt, onPromptSaved }
         lastLoadedPromptId.current = promptId
         // Parse and populate form fields from the loaded prompt first
         parsePromptContent(content)
+        // Expand Technical Architecture and Design Styles sections when loading a prompt so user can see loaded values
+        setExpandedSections(prev => ({
+          ...prev,
+          technicalArchitecture: true,
+          designStyles: true
+        }))
         // Initialize lastAutoGenerated to empty so merge works correctly
         // The merge will use the loaded content (prev) as baseline
         // After form fields are populated, autoGeneratedPrompt will update and lastAutoGenerated will be set
@@ -943,27 +990,29 @@ function RequirementsConstructor({ onNavigateBack, loadedPrompt, onPromptSaved }
       techArch.push(`Model Validation: ${modelValidation || customModelValidation}`)
     }
     
-    // Design Styles (under Technical Architecture)
-    if (designStyles.length > 0 || customDesignStyle) {
-      const stylesList = [...designStyles]
-      if (customDesignStyle) stylesList.push(customDesignStyle)
-      techArch.push(`Design Style: ${stylesList.join(', ')}`)
-    }
-    
-    if (iconLibrary || customIconLibrary) {
-      techArch.push(`Icon Library: ${iconLibrary || customIconLibrary}`)
-    }
-    
-    if (uiFramework || customUiFramework) {
-      techArch.push(`UI Framework: ${uiFramework || customUiFramework}`)
-    }
-    
     if (chartLibrary || customChartLibrary) {
       techArch.push(`Chart Library: ${chartLibrary || customChartLibrary}`)
     }
     
     if (techArch.length > 0) {
       sections.push('## Technical Architecture\n' + techArch.join('\n'))
+    }
+    
+    // Design Styles Section (separate from Technical Architecture)
+    const designStylesList = []
+    if (designStyles.length > 0 || customDesignStyle) {
+      const stylesList = [...designStyles]
+      if (customDesignStyle) stylesList.push(customDesignStyle)
+      designStylesList.push(...stylesList)
+    }
+    if (iconLibrary || customIconLibrary) {
+      designStylesList.push(`Icon Library: ${iconLibrary || customIconLibrary}`)
+    }
+    if (uiFramework || customUiFramework) {
+      designStylesList.push(`UI Framework: ${uiFramework || customUiFramework}`)
+    }
+    if (designStylesList.length > 0) {
+      sections.push('## Design Styles\n' + designStylesList.join('\n'))
     }
     
     // Product Requirements Section
@@ -1139,9 +1188,6 @@ function RequirementsConstructor({ onNavigateBack, loadedPrompt, onPromptSaved }
         
         // Process existing sections and merge with new
         existingSectionSections.forEach(({ header, section, lines }) => {
-          const existingContent = lines.slice(1).join('\n').trim()
-          const existingItems = existingContent ? existingContent.split('\n').map(l => l.trim()).filter(l => l) : []
-          
           // Check if new content has this section
           const newSection = newSections.find(s => {
             const sLines = s.split('\n')
@@ -1149,12 +1195,37 @@ function RequirementsConstructor({ onNavigateBack, loadedPrompt, onPromptSaved }
           })
           
           if (newSection) {
+            // For simple text sections (Non-Functional Requirements, Business Rules, etc.),
+            // just replace the content instead of merging line by line
+            const simpleTextSections = [
+              '## Non-Functional Requirements',
+              '## Business Rules',
+              '## Additional Requirements',
+              '## User Stories',
+              '## Product Requirements',
+              '## Acceptance Criteria',
+              '## Design Styles'
+            ]
+            
+            if (simpleTextSections.includes(header)) {
+              // Simple text sections: just use the new content directly
+              const newLines = newSection.split('\n')
+              const newContent = newLines.slice(1).join('\n').trim()
+              if (newContent && newContent.trim()) {
+                mergedSections.push(header + '\n' + newContent.trim())
+              }
+              return // Skip the merge logic below
+            }
+            
+            const existingContent = lines.slice(1).join('\n').trim()
+            const existingItems = existingContent ? existingContent.split('\n').map(l => l.trim()).filter(l => l) : []
             const newLines = newSection.split('\n')
             const newContent = newLines.slice(1).join('\n').trim()
             const newItems = newContent ? newContent.split('\n').map(l => l.trim()).filter(l => l) : []
             
             // Merge: keep existing items, add/update new items
             const existingItemMap = new Map()
+            const customItemsSet = new Set() // Use Set to avoid duplicates
             const customItems = []
             
             existingItems.forEach(item => {
@@ -1170,7 +1241,12 @@ function RequirementsConstructor({ onNavigateBack, loadedPrompt, onPromptSaved }
               if (isAutoGenerated && key) {
                 existingItemMap.set(key, item)
               } else {
-                customItems.push(item)
+                // Use Set to avoid duplicates
+                const normalizedItem = item.trim()
+                if (normalizedItem && !customItemsSet.has(normalizedItem)) {
+                  customItemsSet.add(normalizedItem)
+                  customItems.push(item)
+                }
               }
             })
             
@@ -1182,6 +1258,13 @@ function RequirementsConstructor({ onNavigateBack, loadedPrompt, onPromptSaved }
               if (key) {
                 newItemKeys.add(key)
                 existingItemMap.set(key, item)
+              } else {
+                // Custom item without a key - deduplicate it
+                const normalizedItem = item.trim()
+                if (normalizedItem && !customItemsSet.has(normalizedItem)) {
+                  customItemsSet.add(normalizedItem)
+                  customItems.push(item)
+                }
               }
             })
             
@@ -1291,6 +1374,27 @@ function RequirementsConstructor({ onNavigateBack, loadedPrompt, onPromptSaved }
         processedHeaders.add(header)
         
         if (newSectionMap.has(header)) {
+          // For simple text sections (Non-Functional Requirements, Business Rules, etc.),
+          // just replace the content instead of merging line by line
+          const simpleTextSections = [
+            '## Non-Functional Requirements',
+            '## Business Rules',
+            '## Additional Requirements',
+            '## User Stories',
+            '## Product Requirements',
+            '## Acceptance Criteria',
+            '## Design Styles'
+          ]
+          
+          if (simpleTextSections.includes(header)) {
+            // Simple text sections: just use the new content directly
+            const newContent = newSectionMap.get(header)
+            if (newContent && newContent.trim()) {
+              mergedSections.push(header + '\n' + newContent.trim())
+            }
+            return // Skip the merge logic below
+          }
+          
           // Merge content: combine existing items with new items, avoiding duplicates
           const existingContent = lines.slice(1).join('\n').trim()
           const newContent = newSectionMap.get(header)
@@ -1302,6 +1406,7 @@ function RequirementsConstructor({ onNavigateBack, loadedPrompt, onPromptSaved }
           // Create a map to track auto-generated items by their key (e.g., "Frontend Framework:")
           // Also keep track of custom items that don't match the pattern
           const existingItemMap = new Map()
+          const customItemsSet = new Set() // Use Set to avoid duplicates
           const customItems = [] // Items that don't match auto-generated pattern
           
           existingItems.forEach(item => {
@@ -1333,8 +1438,12 @@ function RequirementsConstructor({ onNavigateBack, loadedPrompt, onPromptSaved }
             if (isAutoGenerated && key) {
               existingItemMap.set(key, item)
             } else {
-              // This is custom text, preserve it
-              customItems.push(item)
+              // This is custom text, preserve it (use Set to avoid duplicates)
+              const normalizedItem = item.trim()
+              if (normalizedItem && !customItemsSet.has(normalizedItem)) {
+                customItemsSet.add(normalizedItem)
+                customItems.push(item)
+              }
             }
           })
           
@@ -1403,7 +1512,9 @@ function RequirementsConstructor({ onNavigateBack, loadedPrompt, onPromptSaved }
               existingItemMap.set(itemKey, item)
             } else {
               // Doesn't match pattern, treat as custom
-              if (!customItems.includes(item)) {
+              const normalizedItem = item.trim()
+              if (normalizedItem && !customItemsSet.has(normalizedItem)) {
+                customItemsSet.add(normalizedItem)
                 customItems.push(item)
               }
             }
@@ -2656,129 +2767,6 @@ function RequirementsConstructor({ onNavigateBack, loadedPrompt, onPromptSaved }
                 />
               </div>
 
-              {/* Design Styles Subsection */}
-              <div className="form-group" style={{ marginTop: '24px', paddingTop: '24px', borderTop: '1px solid var(--border-primary)' }}>
-                <label style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px' }}>
-                  <Palette size={16} />
-                  <span>Design Styles</span>
-                </label>
-                
-                <div className="form-group">
-                  <label>Design Style</label>
-                  <div className="multi-select-container">
-                    {DESIGN_STYLES.map(item => (
-                      <button
-                        key={item}
-                        type="button"
-                        className={`multi-select-chip ${designStyles.includes(item) ? 'selected' : ''}`}
-                        onClick={() => toggleDesignStyle(item)}
-                      >
-                        {item}
-                        {designStyles.includes(item) && <Check size={12} />}
-                      </button>
-                    ))}
-                  </div>
-                  <input
-                    type="text"
-                    placeholder="Or add custom design style..."
-                    value={customDesignStyle}
-                    onChange={(e) => setCustomDesignStyle(e.target.value)}
-                    className="form-input"
-                  />
-                </div>
-
-                <div className="form-group">
-                  <label>Icon Library</label>
-                  <div className="dropdown-with-custom">
-                    <select
-                      value={iconLibrary}
-                      onChange={(e) => {
-                        setIconLibrary(e.target.value)
-                        if (e.target.value) setCustomIconLibrary('')
-                      }}
-                      className="form-select"
-                    >
-                      <option value="">Select or add custom...</option>
-                      {ICON_LIBRARIES.map(lib => (
-                        <option key={lib} value={lib}>{lib}</option>
-                      ))}
-                    </select>
-                    {iconLibrary && (
-                      <button
-                        type="button"
-                        className="btn-clear-select"
-                        onClick={(e) => {
-                          e.preventDefault()
-                          e.stopPropagation()
-                          setIconLibrary('')
-                        }}
-                        onMouseDown={(e) => {
-                          e.preventDefault()
-                          e.stopPropagation()
-                        }}
-                      >
-                        <X size={14} />
-                      </button>
-                    )}
-                  </div>
-                  <input
-                    type="text"
-                    placeholder="Or enter custom icon library..."
-                    value={customIconLibrary}
-                    onChange={(e) => {
-                      setCustomIconLibrary(e.target.value)
-                      if (e.target.value) setIconLibrary('')
-                    }}
-                    className="form-input"
-                  />
-                </div>
-
-                <div className="form-group">
-                  <label>UI Framework</label>
-                  <div className="dropdown-with-custom">
-                    <select
-                      value={uiFramework}
-                      onChange={(e) => {
-                        setUiFramework(e.target.value)
-                        if (e.target.value) setCustomUiFramework('')
-                      }}
-                      className="form-select"
-                    >
-                      <option value="">Select or add custom...</option>
-                      {UI_FRAMEWORKS.map(fw => (
-                        <option key={fw} value={fw}>{fw}</option>
-                      ))}
-                    </select>
-                    {uiFramework && (
-                      <button
-                        type="button"
-                        className="btn-clear-select"
-                        onClick={(e) => {
-                          e.preventDefault()
-                          e.stopPropagation()
-                          setUiFramework('')
-                        }}
-                        onMouseDown={(e) => {
-                          e.preventDefault()
-                          e.stopPropagation()
-                        }}
-                      >
-                        <X size={14} />
-                      </button>
-                    )}
-                  </div>
-                  <input
-                    type="text"
-                    placeholder="Or enter custom UI framework..."
-                    value={customUiFramework}
-                    onChange={(e) => {
-                      setCustomUiFramework(e.target.value)
-                      if (e.target.value) setUiFramework('')
-                    }}
-                    className="form-input"
-                  />
-                </div>
-
                 <div className="form-group">
                   <label>Chart Library</label>
                   <div className="dropdown-with-custom">
@@ -2824,7 +2812,143 @@ function RequirementsConstructor({ onNavigateBack, loadedPrompt, onPromptSaved }
                     className="form-input"
                   />
                 </div>
+                </>
+              )}
+            </section>
+
+            {/* Design Styles Section */}
+            <section className="requirements-section">
+              <div 
+                className="section-header clickable"
+                onClick={() => toggleSection('designStyles')}
+                style={{ cursor: 'pointer' }}
+              >
+                <Palette size={18} />
+                <h2>Design Styles</h2>
+                {expandedSections.designStyles ? (
+                  <ChevronDown size={18} />
+                ) : (
+                  <ChevronRight size={18} />
+                )}
               </div>
+              
+              {expandedSections.designStyles && (
+                <>
+                  <div className="form-group">
+                    <label>Design Style</label>
+                    <div className="multi-select-container">
+                      {DESIGN_STYLES.map(item => (
+                        <button
+                          key={item}
+                          type="button"
+                          className={`multi-select-chip ${designStyles.includes(item) ? 'selected' : ''}`}
+                          onClick={() => toggleDesignStyle(item)}
+                        >
+                          {item}
+                          {designStyles.includes(item) && <Check size={12} />}
+                        </button>
+                      ))}
+                    </div>
+                    <input
+                      type="text"
+                      placeholder="Or add custom design style..."
+                      value={customDesignStyle}
+                      onChange={(e) => setCustomDesignStyle(e.target.value)}
+                      className="form-input"
+                    />
+                  </div>
+
+                  <div className="form-group">
+                    <label>Icon Library</label>
+                    <div className="dropdown-with-custom">
+                      <select
+                        value={iconLibrary}
+                        onChange={(e) => {
+                          setIconLibrary(e.target.value)
+                          if (e.target.value) setCustomIconLibrary('')
+                        }}
+                        className="form-select"
+                      >
+                        <option value="">Select or add custom...</option>
+                        {ICON_LIBRARIES.map(lib => (
+                          <option key={lib} value={lib}>{lib}</option>
+                        ))}
+                      </select>
+                      {iconLibrary && (
+                        <button
+                          type="button"
+                          className="btn-clear-select"
+                          onClick={(e) => {
+                            e.preventDefault()
+                            e.stopPropagation()
+                            setIconLibrary('')
+                          }}
+                          onMouseDown={(e) => {
+                            e.preventDefault()
+                            e.stopPropagation()
+                          }}
+                        >
+                          <X size={14} />
+                        </button>
+                      )}
+                    </div>
+                    <input
+                      type="text"
+                      placeholder="Or enter custom icon library..."
+                      value={customIconLibrary}
+                      onChange={(e) => {
+                        setCustomIconLibrary(e.target.value)
+                        if (e.target.value) setIconLibrary('')
+                      }}
+                      className="form-input"
+                    />
+                  </div>
+
+                  <div className="form-group">
+                    <label>UI Framework</label>
+                    <div className="dropdown-with-custom">
+                      <select
+                        value={uiFramework}
+                        onChange={(e) => {
+                          setUiFramework(e.target.value)
+                          if (e.target.value) setCustomUiFramework('')
+                        }}
+                        className="form-select"
+                      >
+                        <option value="">Select or add custom...</option>
+                        {UI_FRAMEWORKS.map(fw => (
+                          <option key={fw} value={fw}>{fw}</option>
+                        ))}
+                      </select>
+                      {uiFramework && (
+                        <button
+                          type="button"
+                          className="btn-clear-select"
+                          onClick={(e) => {
+                            e.preventDefault()
+                            e.stopPropagation()
+                            setUiFramework('')
+                          }}
+                          onMouseDown={(e) => {
+                            e.preventDefault()
+                            e.stopPropagation()
+                          }}
+                        >
+                          <X size={14} />
+                        </button>
+                      )}
+                    </div>
+                    <input
+                      type="text"
+                      placeholder="Or enter custom UI framework..."
+                      value={customUiFramework}
+                      onChange={(e) => {
+                        setCustomUiFramework(e.target.value)
+                        if (e.target.value) setUiFramework('')
+                      }}
+                      className="form-input"
+                    />
+                  </div>
                 </>
               )}
             </section>

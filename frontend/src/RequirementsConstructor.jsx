@@ -4,6 +4,7 @@ import {
   Copy, 
   Check, 
   ChevronDown,
+  ChevronRight,
   Plus,
   X,
   FileText,
@@ -252,6 +253,37 @@ const OBSERVABILITY_TOOLS = [
   'Zipkin'
 ]
 
+// Additional complementary options
+const API_TESTING_OPTIONS = [
+  'Prefer OpenAPI-driven API tests.',
+  'Curl examples must be runnable.',
+  'Axios or curl-based tests are acceptable if they map cleanly to Postman collections.'
+]
+
+const AI_FRAMEWORK_OPTIONS = [
+  'Use LangChain for AI features.',
+  'Allowed: prompt templates, chains, tool calling.',
+  'Avoid autonomous agents unless explicitly requested.',
+  'Isolate AI logic behind clear service boundaries.',
+  'Prompts must be versioned.',
+  'Provide offline / mock mode for tests.',
+  'Do not call real LLMs in CI by default.',
+  'Ask before adding new mock frameworks or prompt-evaluation strategies.'
+]
+
+const AI_TESTING_OPTIONS = [
+  'Mock LLM calls by default.',
+  'Validate structure, schema, and contracts rather than exact text.',
+  'Explicitly test timeout and degraded-response scenarios.'
+]
+
+const OBSERVABILITY_OPTIONS = [
+  'Structured JSON logging.',
+  'Request ID propagation across services.',
+  'Metrics endpoint required.',
+  'Health check endpoints required.'
+]
+
 const SECURITY_DEFAULTS = [
   'HTTPS Only',
   'CORS Configuration',
@@ -274,6 +306,16 @@ const FAILURE_FIRST_OPTIONS = [
   'Bulkhead Pattern',
   'Timeout Handling',
   'Fallback Mechanisms'
+]
+
+const TESTING_PHILOSOPHY_OPTIONS = [
+  'Focus on E2E testing only.',
+  'Generate Playwright tests for user-facing behavior changes.',
+  'Ask before generating tests when impact is unclear.',
+  'When implementing features, reason through how tests validate correctness.',
+  'Add negative tests and explicitly test failure paths.',
+  'Simulate partial outages where relevant (e.g., downstream service failure, LLM timeout).',
+  'Cursor should verify its own work by reasoning through how Playwright tests would pass or fail.'
 ]
 
 const DOCKER_ENV_OPTIONS = [
@@ -312,20 +354,30 @@ function RequirementsConstructor({ onNavigateBack }) {
   const [customTesting, setCustomTesting] = useState('')
   const [apiTesting, setApiTesting] = useState('')
   const [customApiTesting, setCustomApiTesting] = useState('')
+  const [apiTestingOptions, setApiTestingOptions] = useState([])
+  const [customApiTestingOptions, setCustomApiTestingOptions] = useState('')
   const [aiFramework, setAiFramework] = useState('')
   const [customAiFramework, setCustomAiFramework] = useState('')
+  const [aiFrameworkOptions, setAiFrameworkOptions] = useState([])
+  const [customAiFrameworkOptions, setCustomAiFrameworkOptions] = useState('')
   const [vectorDatabase, setVectorDatabase] = useState('')
   const [customVectorDatabase, setCustomVectorDatabase] = useState('')
   const [aiTesting, setAiTesting] = useState('')
   const [customAiTesting, setCustomAiTesting] = useState('')
+  const [aiTestingOptions, setAiTestingOptions] = useState([])
+  const [customAiTestingOptions, setCustomAiTestingOptions] = useState('')
   const [dockerEnv, setDockerEnv] = useState([])
   const [customDockerEnv, setCustomDockerEnv] = useState('')
   const [observability, setObservability] = useState('')
   const [customObservability, setCustomObservability] = useState('')
+  const [observabilityOptions, setObservabilityOptions] = useState([])
+  const [customObservabilityOptions, setCustomObservabilityOptions] = useState('')
   const [securityDefaults, setSecurityDefaults] = useState([])
   const [customSecurity, setCustomSecurity] = useState('')
   const [failureFirst, setFailureFirst] = useState([])
   const [customFailureFirst, setCustomFailureFirst] = useState('')
+  const [testingPhilosophy, setTestingPhilosophy] = useState([])
+  const [customTestingPhilosophy, setCustomTestingPhilosophy] = useState('')
   
   // Business Rules
   const [businessRules, setBusinessRules] = useState('')
@@ -334,6 +386,23 @@ function RequirementsConstructor({ onNavigateBack }) {
   const [additionalRequirements, setAdditionalRequirements] = useState('')
   const [userStories, setUserStories] = useState('')
   const [nonFunctionalRequirements, setNonFunctionalRequirements] = useState('')
+  const [productRequirements, setProductRequirements] = useState('')
+  const [acceptanceCriteria, setAcceptanceCriteria] = useState('')
+
+  // Section collapse state (all collapsed by default)
+  const [expandedSections, setExpandedSections] = useState({
+    technicalArchitecture: false,
+    productRequirements: false,
+    businessRules: false,
+    additionalRequirements: false
+  })
+
+  const toggleSection = (section) => {
+    setExpandedSections(prev => ({
+      ...prev,
+      [section]: !prev[section]
+    }))
+  }
 
   // Get compatible options based on selected backend framework
   const getCompatibleOptions = (category) => {
@@ -397,20 +466,53 @@ function RequirementsConstructor({ onNavigateBack }) {
       techArch.push(`Testing Framework: ${testingFramework || customTesting}`)
     }
     
-    if (apiTesting || customApiTesting) {
-      techArch.push(`API Testing: ${apiTesting || customApiTesting}`)
+    if (apiTesting || customApiTesting || apiTestingOptions.length > 0 || customApiTestingOptions) {
+      const apiTestingParts = []
+      if (apiTesting || customApiTesting) {
+        apiTestingParts.push(apiTesting || customApiTesting)
+      }
+      if (apiTestingOptions.length > 0 || customApiTestingOptions) {
+        const optionsList = [...apiTestingOptions]
+        if (customApiTestingOptions) optionsList.push(customApiTestingOptions)
+        apiTestingParts.push(...optionsList)
+      }
+      if (apiTestingParts.length > 0) {
+        techArch.push(`API Testing: ${apiTestingParts.join(', ')}`)
+      }
     }
     
-    if (aiFramework || customAiFramework) {
-      techArch.push(`AI Framework: ${aiFramework || customAiFramework}`)
+    if (aiFramework || customAiFramework || aiFrameworkOptions.length > 0 || customAiFrameworkOptions) {
+      const aiFrameworkParts = []
+      if (aiFramework || customAiFramework) {
+        aiFrameworkParts.push(aiFramework || customAiFramework)
+      }
+      if (aiFrameworkOptions.length > 0 || customAiFrameworkOptions) {
+        const optionsList = [...aiFrameworkOptions]
+        if (customAiFrameworkOptions) optionsList.push(customAiFrameworkOptions)
+        aiFrameworkParts.push(...optionsList)
+      }
+      if (aiFrameworkParts.length > 0) {
+        techArch.push(`AI Framework: ${aiFrameworkParts.join(', ')}`)
+      }
     }
     
     if (vectorDatabase || customVectorDatabase) {
       techArch.push(`Vector Database: ${vectorDatabase || customVectorDatabase}`)
     }
     
-    if (aiTesting || customAiTesting) {
-      techArch.push(`AI Testing: ${aiTesting || customAiTesting}`)
+    if (aiTesting || customAiTesting || aiTestingOptions.length > 0 || customAiTestingOptions) {
+      const aiTestingParts = []
+      if (aiTesting || customAiTesting) {
+        aiTestingParts.push(aiTesting || customAiTesting)
+      }
+      if (aiTestingOptions.length > 0 || customAiTestingOptions) {
+        const optionsList = [...aiTestingOptions]
+        if (customAiTestingOptions) optionsList.push(customAiTestingOptions)
+        aiTestingParts.push(...optionsList)
+      }
+      if (aiTestingParts.length > 0) {
+        techArch.push(`AI Testing: ${aiTestingParts.join(', ')}`)
+      }
     }
     
     if (dockerEnv.length > 0 || customDockerEnv) {
@@ -419,8 +521,19 @@ function RequirementsConstructor({ onNavigateBack }) {
       techArch.push(`Docker and Environment: ${dockerList.join(', ')}`)
     }
     
-    if (observability || customObservability) {
-      techArch.push(`Observability: ${observability || customObservability}`)
+    if (observability || customObservability || observabilityOptions.length > 0 || customObservabilityOptions) {
+      const observabilityParts = []
+      if (observability || customObservability) {
+        observabilityParts.push(observability || customObservability)
+      }
+      if (observabilityOptions.length > 0 || customObservabilityOptions) {
+        const optionsList = [...observabilityOptions]
+        if (customObservabilityOptions) optionsList.push(customObservabilityOptions)
+        observabilityParts.push(...optionsList)
+      }
+      if (observabilityParts.length > 0) {
+        techArch.push(`Observability: ${observabilityParts.join(', ')}`)
+      }
     }
     
     if (securityDefaults.length > 0 || customSecurity) {
@@ -435,18 +548,34 @@ function RequirementsConstructor({ onNavigateBack }) {
       techArch.push(`Failure First Thinking: ${failureList.join(', ')}`)
     }
     
+    if (testingPhilosophy.length > 0 || customTestingPhilosophy) {
+      const testingList = [...testingPhilosophy]
+      if (customTestingPhilosophy) testingList.push(customTestingPhilosophy)
+      techArch.push(`Testing Philosophy: ${testingList.join(', ')}`)
+    }
+    
     if (techArch.length > 0) {
       sections.push('## Technical Architecture\n' + techArch.join('\n'))
     }
     
-    // Business Rules Section
-    if (businessRules.trim()) {
-      sections.push('## Business Rules\n' + businessRules.trim())
+    // Product Requirements Section
+    if (productRequirements.trim()) {
+      sections.push('## Product Requirements\n' + productRequirements.trim())
+    }
+    
+    // Acceptance Criteria Section
+    if (acceptanceCriteria.trim()) {
+      sections.push('## Acceptance Criteria\n' + acceptanceCriteria.trim())
     }
     
     // User Stories Section
     if (userStories.trim()) {
       sections.push('## User Stories\n' + userStories.trim())
+    }
+    
+    // Business Rules Section
+    if (businessRules.trim()) {
+      sections.push('## Business Rules\n' + businessRules.trim())
     }
     
     // Non-Functional Requirements Section
@@ -470,16 +599,19 @@ function RequirementsConstructor({ onNavigateBack }) {
     apiGateway, customApiGateway,
     apiContracts, customApiContracts,
     testingFramework, customTesting,
-    apiTesting, customApiTesting,
-    aiFramework, customAiFramework,
+    apiTesting, customApiTesting, apiTestingOptions, customApiTestingOptions,
+    aiFramework, customAiFramework, aiFrameworkOptions, customAiFrameworkOptions,
     vectorDatabase, customVectorDatabase,
-    aiTesting, customAiTesting,
+    aiTesting, customAiTesting, aiTestingOptions, customAiTestingOptions,
     dockerEnv, customDockerEnv,
-    observability, customObservability,
+    observability, customObservability, observabilityOptions, customObservabilityOptions,
     securityDefaults, customSecurity,
     failureFirst, customFailureFirst,
+    testingPhilosophy, customTestingPhilosophy,
     businessRules,
     userStories,
+    productRequirements,
+    acceptanceCriteria,
     nonFunctionalRequirements,
     additionalRequirements
   ])
@@ -568,7 +700,8 @@ function RequirementsConstructor({ onNavigateBack }) {
                 item.includes('Environment:') ||
                 item.includes('Observability:') ||
                 item.includes('Security Defaults:') ||
-                item.includes('Failure First Thinking:')
+                item.includes('Failure First Thinking:') ||
+                item.includes('Testing Philosophy:')
               )
               
               if (isAutoGenerated && key) {
@@ -724,7 +857,8 @@ function RequirementsConstructor({ onNavigateBack }) {
             item.includes('Environment:') ||
             item.includes('Observability:') ||
             item.includes('Security Defaults:') ||
-            item.includes('Failure First Thinking:')
+            item.includes('Failure First Thinking:') ||
+            item.includes('Testing Philosophy:')
           )
           
           // Remove if it's an auto-generated item that should be removed
@@ -829,6 +963,46 @@ function RequirementsConstructor({ onNavigateBack }) {
     )
   }
 
+  const toggleObservabilityOptions = (item) => {
+    setObservabilityOptions(prev => 
+      prev.includes(item) 
+        ? prev.filter(i => i !== item)
+        : [...prev, item]
+    )
+  }
+
+  const toggleAiTestingOptions = (item) => {
+    setAiTestingOptions(prev => 
+      prev.includes(item) 
+        ? prev.filter(i => i !== item)
+        : [...prev, item]
+    )
+  }
+
+  const toggleAiFrameworkOptions = (item) => {
+    setAiFrameworkOptions(prev => 
+      prev.includes(item) 
+        ? prev.filter(i => i !== item)
+        : [...prev, item]
+    )
+  }
+
+  const toggleApiTestingOptions = (item) => {
+    setApiTestingOptions(prev => 
+      prev.includes(item) 
+        ? prev.filter(i => i !== item)
+        : [...prev, item]
+    )
+  }
+
+  const toggleTestingPhilosophy = (item) => {
+    setTestingPhilosophy(prev => 
+      prev.includes(item) 
+        ? prev.filter(i => i !== item)
+        : [...prev, item]
+    )
+  }
+
   return (
     <div className="requirements-constructor">
       <div className="requirements-layout">
@@ -850,11 +1024,22 @@ function RequirementsConstructor({ onNavigateBack }) {
           <div className="requirements-form">
             {/* Technical Architecture Section */}
             <section className="requirements-section">
-              <div className="section-header">
+              <div 
+                className="section-header clickable"
+                onClick={() => toggleSection('technicalArchitecture')}
+                style={{ cursor: 'pointer' }}
+              >
                 <Settings size={18} />
                 <h2>Technical Architecture</h2>
+                {expandedSections.technicalArchitecture ? (
+                  <ChevronDown size={18} />
+                ) : (
+                  <ChevronRight size={18} />
+                )}
               </div>
 
+              {expandedSections.technicalArchitecture && (
+                <>
               <div className="form-group">
                 <label>Frontend Framework</label>
                 <div className="dropdown-with-custom">
@@ -1219,6 +1404,27 @@ function RequirementsConstructor({ onNavigateBack }) {
                   }}
                   className="form-input"
                 />
+                <div className="multi-select-container" style={{ marginTop: '8px' }}>
+                  {API_TESTING_OPTIONS.map(item => (
+                    <button
+                      key={item}
+                      type="button"
+                      className={`multi-select-chip ${apiTestingOptions.includes(item) ? 'selected' : ''}`}
+                      onClick={() => toggleApiTestingOptions(item)}
+                    >
+                      {item}
+                      {apiTestingOptions.includes(item) && <Check size={12} />}
+                    </button>
+                  ))}
+                </div>
+                <input
+                  type="text"
+                  placeholder="Or add custom API testing requirement..."
+                  value={customApiTestingOptions}
+                  onChange={(e) => setCustomApiTestingOptions(e.target.value)}
+                  className="form-input"
+                  style={{ marginTop: '8px' }}
+                />
               </div>
 
               <div className="form-group">
@@ -1256,6 +1462,27 @@ function RequirementsConstructor({ onNavigateBack }) {
                     if (e.target.value) setAiFramework('')
                   }}
                   className="form-input"
+                />
+                <div className="multi-select-container" style={{ marginTop: '8px' }}>
+                  {AI_FRAMEWORK_OPTIONS.map(item => (
+                    <button
+                      key={item}
+                      type="button"
+                      className={`multi-select-chip ${aiFrameworkOptions.includes(item) ? 'selected' : ''}`}
+                      onClick={() => toggleAiFrameworkOptions(item)}
+                    >
+                      {item}
+                      {aiFrameworkOptions.includes(item) && <Check size={12} />}
+                    </button>
+                  ))}
+                </div>
+                <input
+                  type="text"
+                  placeholder="Or add custom AI framework requirement..."
+                  value={customAiFrameworkOptions}
+                  onChange={(e) => setCustomAiFrameworkOptions(e.target.value)}
+                  className="form-input"
+                  style={{ marginTop: '8px' }}
                 />
               </div>
 
@@ -1333,6 +1560,27 @@ function RequirementsConstructor({ onNavigateBack }) {
                   }}
                   className="form-input"
                 />
+                <div className="multi-select-container" style={{ marginTop: '8px' }}>
+                  {AI_TESTING_OPTIONS.map(item => (
+                    <button
+                      key={item}
+                      type="button"
+                      className={`multi-select-chip ${aiTestingOptions.includes(item) ? 'selected' : ''}`}
+                      onClick={() => toggleAiTestingOptions(item)}
+                    >
+                      {item}
+                      {aiTestingOptions.includes(item) && <Check size={12} />}
+                    </button>
+                  ))}
+                </div>
+                <input
+                  type="text"
+                  placeholder="Or add custom AI testing requirement..."
+                  value={customAiTestingOptions}
+                  onChange={(e) => setCustomAiTestingOptions(e.target.value)}
+                  className="form-input"
+                  style={{ marginTop: '8px' }}
+                />
               </div>
 
               <div className="form-group">
@@ -1395,6 +1643,27 @@ function RequirementsConstructor({ onNavigateBack }) {
                   }}
                   className="form-input"
                 />
+                <div className="multi-select-container" style={{ marginTop: '8px' }}>
+                  {OBSERVABILITY_OPTIONS.map(item => (
+                    <button
+                      key={item}
+                      type="button"
+                      className={`multi-select-chip ${observabilityOptions.includes(item) ? 'selected' : ''}`}
+                      onClick={() => toggleObservabilityOptions(item)}
+                    >
+                      {item}
+                      {observabilityOptions.includes(item) && <Check size={12} />}
+                    </button>
+                  ))}
+                </div>
+                <input
+                  type="text"
+                  placeholder="Or add custom observability requirement..."
+                  value={customObservabilityOptions}
+                  onChange={(e) => setCustomObservabilityOptions(e.target.value)}
+                  className="form-input"
+                  style={{ marginTop: '8px' }}
+                />
               </div>
 
               <div className="form-group">
@@ -1444,32 +1713,74 @@ function RequirementsConstructor({ onNavigateBack }) {
                   className="form-input"
                 />
               </div>
-            </section>
 
-            {/* Business Rules Section */}
-            <section className="requirements-section">
-              <div className="section-header">
-                <Building2 size={18} />
-                <h2>Business Rules</h2>
-              </div>
               <div className="form-group">
-                <textarea
-                  value={businessRules}
-                  onChange={(e) => setBusinessRules(e.target.value)}
-                  placeholder="Define business logic, validation rules, workflows..."
-                  className="form-textarea"
-                  rows={5}
+                <label>Testing Philosophy</label>
+                <div className="multi-select-container">
+                  {TESTING_PHILOSOPHY_OPTIONS.map(item => (
+                    <button
+                      key={item}
+                      type="button"
+                      className={`multi-select-chip ${testingPhilosophy.includes(item) ? 'selected' : ''}`}
+                      onClick={() => toggleTestingPhilosophy(item)}
+                    >
+                      {item}
+                      {testingPhilosophy.includes(item) && <Check size={12} />}
+                    </button>
+                  ))}
+                </div>
+                <input
+                  type="text"
+                  placeholder="Or add custom testing philosophy requirement..."
+                  value={customTestingPhilosophy}
+                  onChange={(e) => setCustomTestingPhilosophy(e.target.value)}
+                  className="form-input"
                 />
               </div>
+                </>
+              )}
             </section>
 
-            {/* Additional Sections */}
+            {/* Product Requirements Section */}
             <section className="requirements-section">
-              <div className="section-header">
+              <div 
+                className="section-header clickable"
+                onClick={() => toggleSection('productRequirements')}
+                style={{ cursor: 'pointer' }}
+              >
                 <FileText size={18} />
-                <h2>Additional Requirements</h2>
+                <h2>Product Requirements</h2>
+                {expandedSections.productRequirements ? (
+                  <ChevronDown size={18} />
+                ) : (
+                  <ChevronRight size={18} />
+                )}
               </div>
               
+              {expandedSections.productRequirements && (
+                <>
+              <div className="form-group">
+                <label>Product Requirements</label>
+                <textarea
+                  value={productRequirements}
+                  onChange={(e) => setProductRequirements(e.target.value)}
+                  placeholder="Define product features, functionality, and capabilities..."
+                  className="form-textarea"
+                  rows={4}
+                />
+              </div>
+
+              <div className="form-group">
+                <label>Acceptance Criteria</label>
+                <textarea
+                  value={acceptanceCriteria}
+                  onChange={(e) => setAcceptanceCriteria(e.target.value)}
+                  placeholder="Define the conditions that must be met for a feature to be considered complete..."
+                  className="form-textarea"
+                  rows={4}
+                />
+              </div>
+
               <div className="form-group">
                 <label>User Stories</label>
                 <textarea
@@ -1480,7 +1791,56 @@ function RequirementsConstructor({ onNavigateBack }) {
                   rows={4}
                 />
               </div>
+                </>
+              )}
+            </section>
 
+            {/* Business Rules Section */}
+            <section className="requirements-section">
+              <div 
+                className="section-header clickable"
+                onClick={() => toggleSection('businessRules')}
+                style={{ cursor: 'pointer' }}
+              >
+                <Building2 size={18} />
+                <h2>Business Rules</h2>
+                {expandedSections.businessRules ? (
+                  <ChevronDown size={18} />
+                ) : (
+                  <ChevronRight size={18} />
+                )}
+              </div>
+              {expandedSections.businessRules && (
+                <div className="form-group">
+                  <textarea
+                    value={businessRules}
+                    onChange={(e) => setBusinessRules(e.target.value)}
+                    placeholder="Define business logic, validation rules, workflows..."
+                    className="form-textarea"
+                    rows={5}
+                  />
+                </div>
+              )}
+            </section>
+
+            {/* Additional Sections */}
+            <section className="requirements-section">
+              <div 
+                className="section-header clickable"
+                onClick={() => toggleSection('additionalRequirements')}
+                style={{ cursor: 'pointer' }}
+              >
+                <FileText size={18} />
+                <h2>Additional Requirements</h2>
+                {expandedSections.additionalRequirements ? (
+                  <ChevronDown size={18} />
+                ) : (
+                  <ChevronRight size={18} />
+                )}
+              </div>
+              
+              {expandedSections.additionalRequirements && (
+                <>
               <div className="form-group">
                 <label>Non-Functional Requirements</label>
                 <textarea
@@ -1502,6 +1862,8 @@ function RequirementsConstructor({ onNavigateBack }) {
                   rows={4}
                 />
               </div>
+                </>
+              )}
             </section>
           </div>
         </div>

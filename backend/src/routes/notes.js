@@ -1,10 +1,19 @@
 const express = require('express');
 const db = require('../db');
+const validate = require('../validations/validate');
+const {
+  createNoteSchema,
+  updateNoteSchema,
+  updateColorSchema,
+  updateFolderSchema,
+  idParamSchema,
+  folderQuerySchema
+} = require('../validations/noteValidation');
 
 const router = express.Router();
 
 // Get all notes (pinned first, then by updated_at)
-router.get('/', async (req, res) => {
+router.get('/', validate(folderQuerySchema, 'query'), async (req, res) => {
   try {
     const { folder } = req.query;
     
@@ -40,7 +49,7 @@ router.get('/folders', async (req, res) => {
 });
 
 // Get a single note by ID
-router.get('/:id', async (req, res) => {
+router.get('/:id', validate(idParamSchema, 'params'), async (req, res) => {
   try {
     const { id } = req.params;
     const result = await db.query('SELECT * FROM notes WHERE id = $1', [id]);
@@ -57,7 +66,7 @@ router.get('/:id', async (req, res) => {
 });
 
 // Create a new note
-router.post('/', async (req, res) => {
+router.post('/', validate(createNoteSchema), async (req, res) => {
   try {
     const { title, content, color, is_pinned, folder } = req.body;
     
@@ -74,7 +83,7 @@ router.post('/', async (req, res) => {
 });
 
 // Update a note
-router.put('/:id', async (req, res) => {
+router.put('/:id', validate(idParamSchema, 'params'), validate(updateNoteSchema), async (req, res) => {
   try {
     const { id } = req.params;
     const { title, content, color, is_pinned, folder } = req.body;
@@ -96,7 +105,7 @@ router.put('/:id', async (req, res) => {
 });
 
 // Toggle pin status
-router.patch('/:id/pin', async (req, res) => {
+router.patch('/:id/pin', validate(idParamSchema, 'params'), async (req, res) => {
   try {
     const { id } = req.params;
     
@@ -117,7 +126,7 @@ router.patch('/:id/pin', async (req, res) => {
 });
 
 // Update note color
-router.patch('/:id/color', async (req, res) => {
+router.patch('/:id/color', validate(idParamSchema, 'params'), validate(updateColorSchema), async (req, res) => {
   try {
     const { id } = req.params;
     const { color } = req.body;
@@ -139,7 +148,7 @@ router.patch('/:id/color', async (req, res) => {
 });
 
 // Move note to folder
-router.patch('/:id/folder', async (req, res) => {
+router.patch('/:id/folder', validate(idParamSchema, 'params'), validate(updateFolderSchema), async (req, res) => {
   try {
     const { id } = req.params;
     const { folder } = req.body;
@@ -161,7 +170,7 @@ router.patch('/:id/folder', async (req, res) => {
 });
 
 // Delete a note
-router.delete('/:id', async (req, res) => {
+router.delete('/:id', validate(idParamSchema, 'params'), async (req, res) => {
   try {
     const { id } = req.params;
     const result = await db.query(

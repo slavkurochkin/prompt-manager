@@ -1,5 +1,14 @@
 const express = require('express');
 const db = require('../db');
+const validate = require('../validations/validate');
+const {
+  createPromptSchema,
+  updatePromptSchema,
+  updateRatingSchema,
+  updateNoteSchema,
+  updateTagsSchema,
+  idParamSchema
+} = require('../validations/promptValidation');
 
 const router = express.Router();
 
@@ -17,7 +26,7 @@ router.get('/', async (req, res) => {
 });
 
 // Get a single prompt by ID
-router.get('/:id', async (req, res) => {
+router.get('/:id', validate(idParamSchema, 'params'), async (req, res) => {
   try {
     const { id } = req.params;
     const result = await db.query('SELECT * FROM prompts WHERE id = $1', [id]);
@@ -34,13 +43,9 @@ router.get('/:id', async (req, res) => {
 });
 
 // Create a new prompt
-router.post('/', async (req, res) => {
+router.post('/', validate(createPromptSchema), async (req, res) => {
   try {
     const { title, content, model, token_count, rating, note, tags } = req.body;
-    
-    if (!title || !content) {
-      return res.status(400).json({ error: 'Title and content are required' });
-    }
     
     const result = await db.query(
       'INSERT INTO prompts (title, content, model, token_count, rating, note, tags) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *',
@@ -55,14 +60,10 @@ router.post('/', async (req, res) => {
 });
 
 // Update a prompt
-router.put('/:id', async (req, res) => {
+router.put('/:id', validate(idParamSchema, 'params'), validate(updatePromptSchema), async (req, res) => {
   try {
     const { id } = req.params;
     const { title, content, model, token_count, rating, note, tags } = req.body;
-    
-    if (!title || !content) {
-      return res.status(400).json({ error: 'Title and content are required' });
-    }
     
     const result = await db.query(
       'UPDATE prompts SET title = $1, content = $2, model = $3, token_count = $4, rating = $5, note = $6, tags = $7, updated_at = CURRENT_TIMESTAMP WHERE id = $8 RETURNING *',
@@ -81,14 +82,10 @@ router.put('/:id', async (req, res) => {
 });
 
 // Update prompt rating only
-router.patch('/:id/rating', async (req, res) => {
+router.patch('/:id/rating', validate(idParamSchema, 'params'), validate(updateRatingSchema), async (req, res) => {
   try {
     const { id } = req.params;
     const { rating } = req.body;
-    
-    if (rating === undefined || rating < 0 || rating > 5) {
-      return res.status(400).json({ error: 'Rating must be between 0 and 5' });
-    }
     
     const result = await db.query(
       'UPDATE prompts SET rating = $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2 RETURNING *',
@@ -107,7 +104,7 @@ router.patch('/:id/rating', async (req, res) => {
 });
 
 // Update prompt note only
-router.patch('/:id/note', async (req, res) => {
+router.patch('/:id/note', validate(idParamSchema, 'params'), validate(updateNoteSchema), async (req, res) => {
   try {
     const { id } = req.params;
     const { note } = req.body;
@@ -129,14 +126,10 @@ router.patch('/:id/note', async (req, res) => {
 });
 
 // Update prompt tags only
-router.patch('/:id/tags', async (req, res) => {
+router.patch('/:id/tags', validate(idParamSchema, 'params'), validate(updateTagsSchema), async (req, res) => {
   try {
     const { id } = req.params;
     const { tags } = req.body;
-    
-    if (!Array.isArray(tags)) {
-      return res.status(400).json({ error: 'Tags must be an array' });
-    }
     
     const result = await db.query(
       'UPDATE prompts SET tags = $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2 RETURNING *',
@@ -155,7 +148,7 @@ router.patch('/:id/tags', async (req, res) => {
 });
 
 // Delete a prompt
-router.delete('/:id', async (req, res) => {
+router.delete('/:id', validate(idParamSchema, 'params'), async (req, res) => {
   try {
     const { id } = req.params;
     const result = await db.query(

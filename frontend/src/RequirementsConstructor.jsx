@@ -23,7 +23,8 @@ import {
   Save,
   AlertCircle,
   CheckCircle,
-  Loader2
+  Loader2,
+  Palette
 } from 'lucide-react'
 
 const FRONTEND_FRAMEWORKS = [
@@ -349,6 +350,96 @@ const DOCKER_ENV_OPTIONS = [
   'Never hardcode secrets.'
 ]
 
+const DESIGN_STYLES = [
+  'Modern',
+  'Classic',
+  'Minimal',
+  'Clean',
+  'Bold',
+  'Elegant',
+  'Playful',
+  'Professional',
+  'Corporate',
+  'Creative',
+  'Minimalist',
+  'Maximalist',
+  'Flat Design',
+  'Material Design',
+  'Neumorphism',
+  'Glassmorphism',
+  'Skeuomorphic'
+]
+
+const ICON_LIBRARIES = [
+  'React Icons',
+  'Material Icons',
+  'Font Awesome',
+  'Heroicons',
+  'Lucide React',
+  'Feather Icons',
+  'Ionicons',
+  'Ant Design Icons',
+  'Bootstrap Icons',
+  'Remix Icon',
+  'Tabler Icons',
+  'Phosphor Icons',
+  'Radix Icons',
+  'Eva Icons',
+  'Zondicons',
+  'Octicons',
+  'Simple Icons'
+]
+
+const UI_FRAMEWORKS = [
+  'Bootstrap',
+  'Ant Design',
+  'Material-UI (MUI)',
+  'Chakra UI',
+  'Tailwind CSS',
+  'Bulma',
+  'Foundation',
+  'Semantic UI',
+  'React Bootstrap',
+  'Ant Design React',
+  'Mantine',
+  'NextUI',
+  'Shadcn/ui',
+  'Headless UI',
+  'Radix UI',
+  'React Aria',
+  'PrimeReact',
+  'Grommet',
+  'Blueprint.js',
+  'Evergreen',
+  'Carbon Design System',
+  'Fluent UI',
+  'Quasar',
+  'Vuetify',
+  'Element Plus',
+  'Naive UI'
+]
+
+const CHART_LIBRARIES = [
+  'Chart.js',
+  'D3.js',
+  'Recharts',
+  'Victory',
+  'Nivo',
+  'Apache ECharts',
+  'Plotly.js',
+  'ApexCharts',
+  'Highcharts',
+  'Observable Plot',
+  'Visx',
+  'React-Chartjs-2',
+  'Frappe Charts',
+  'Lightweight Charts',
+  'C3.js',
+  'AmCharts',
+  'ZingChart',
+  'TradingView Charts'
+]
+
 const API_BASE = '/api/prompts'
 
 function RequirementsConstructor({ onNavigateBack, loadedPrompt, onPromptSaved }) {
@@ -412,6 +503,16 @@ function RequirementsConstructor({ onNavigateBack, loadedPrompt, onPromptSaved }
   const [modelValidation, setModelValidation] = useState('')
   const [customModelValidation, setCustomModelValidation] = useState('')
   
+  // Design Styles
+  const [designStyles, setDesignStyles] = useState([])
+  const [customDesignStyle, setCustomDesignStyle] = useState('')
+  const [iconLibrary, setIconLibrary] = useState('')
+  const [customIconLibrary, setCustomIconLibrary] = useState('')
+  const [uiFramework, setUiFramework] = useState('')
+  const [customUiFramework, setCustomUiFramework] = useState('')
+  const [chartLibrary, setChartLibrary] = useState('')
+  const [customChartLibrary, setCustomChartLibrary] = useState('')
+  
   // Business Rules
   const [businessRules, setBusinessRules] = useState('')
   
@@ -425,6 +526,7 @@ function RequirementsConstructor({ onNavigateBack, loadedPrompt, onPromptSaved }
   // Section collapse state (all collapsed by default)
   const [expandedSections, setExpandedSections] = useState({
     technicalArchitecture: false,
+    designStyles: false,
     productRequirements: false,
     businessRules: false,
     additionalRequirements: false
@@ -632,6 +734,31 @@ function RequirementsConstructor({ onNavigateBack, loadedPrompt, onPromptSaved }
       sections.push('## Technical Architecture\n' + techArch.join('\n'))
     }
     
+    // Design Styles Section
+    const designStylesSection = []
+    
+    if (designStyles.length > 0 || customDesignStyle) {
+      const stylesList = [...designStyles]
+      if (customDesignStyle) stylesList.push(customDesignStyle)
+      designStylesSection.push(`Design Style: ${stylesList.join(', ')}`)
+    }
+    
+    if (iconLibrary || customIconLibrary) {
+      designStylesSection.push(`Icon Library: ${iconLibrary || customIconLibrary}`)
+    }
+    
+    if (uiFramework || customUiFramework) {
+      designStylesSection.push(`UI Framework: ${uiFramework || customUiFramework}`)
+    }
+    
+    if (chartLibrary || customChartLibrary) {
+      designStylesSection.push(`Chart Library: ${chartLibrary || customChartLibrary}`)
+    }
+    
+    if (designStylesSection.length > 0) {
+      sections.push('## Design Styles\n' + designStylesSection.join('\n'))
+    }
+    
     // Product Requirements Section
     if (productRequirements.trim()) {
       sections.push('## Product Requirements\n' + productRequirements.trim())
@@ -688,7 +815,15 @@ function RequirementsConstructor({ onNavigateBack, loadedPrompt, onPromptSaved }
     productRequirements,
     acceptanceCriteria,
     nonFunctionalRequirements,
-    additionalRequirements
+    additionalRequirements,
+    designStyles,
+    customDesignStyle,
+    iconLibrary,
+    customIconLibrary,
+    uiFramework,
+    customUiFramework,
+    chartLibrary,
+    customChartLibrary
   ])
 
   // Use edited prompt if available, otherwise use auto-generated
@@ -781,7 +916,8 @@ function RequirementsConstructor({ onNavigateBack, loadedPrompt, onPromptSaved }
                 item.includes('Vector Database:') || item.includes('Messaging:') || item.includes('Caching Strategy:') ||
                 item.includes('Gateway:') || item.includes('Contracts:') || item.includes('Testing:') ||
                 item.includes('Environment:') || item.includes('Observability:') || item.includes('Security Defaults:') ||
-                item.includes('Failure First Thinking:') || item.includes('Testing Philosophy:') || item.includes('Model Validation:')
+                item.includes('Failure First Thinking:') || item.includes('Testing Philosophy:') || item.includes('Model Validation:') ||
+                item.includes('Design Style:') || item.includes('Icon Library:') || item.includes('UI Framework:') || item.includes('Chart Library:')
               )
               if (isAutoGenerated && key) {
                 existingItemMap.set(key, item)
@@ -891,7 +1027,11 @@ function RequirementsConstructor({ onNavigateBack, loadedPrompt, onPromptSaved }
               item.includes('Security Defaults:') ||
               item.includes('Failure First Thinking:') ||
               item.includes('Testing Philosophy:') ||
-              item.includes('Model Validation:')
+              item.includes('Model Validation:') ||
+              item.includes('Design Style:') ||
+              item.includes('Icon Library:') ||
+              item.includes('UI Framework:') ||
+              item.includes('Chart Library:')
             )
             
             if (isAutoGenerated && key) {
@@ -1022,7 +1162,11 @@ function RequirementsConstructor({ onNavigateBack, loadedPrompt, onPromptSaved }
             item.includes('Security Defaults:') ||
             item.includes('Failure First Thinking:') ||
             item.includes('Testing Philosophy:') ||
-            item.includes('Model Validation:')
+            item.includes('Model Validation:') ||
+            item.includes('Design Style:') ||
+            item.includes('Icon Library:') ||
+            item.includes('UI Framework:') ||
+            item.includes('Chart Library:')
           )
           
           // Remove if it's an auto-generated item that should be removed
@@ -1244,6 +1388,14 @@ function RequirementsConstructor({ onNavigateBack, loadedPrompt, onPromptSaved }
 
   const toggleTestingPhilosophy = (item) => {
     setTestingPhilosophy(prev => 
+      prev.includes(item) 
+        ? prev.filter(i => i !== item)
+        : [...prev, item]
+    )
+  }
+
+  const toggleDesignStyle = (item) => {
+    setDesignStyles(prev => 
       prev.includes(item) 
         ? prev.filter(i => i !== item)
         : [...prev, item]
@@ -2019,6 +2171,165 @@ function RequirementsConstructor({ onNavigateBack, loadedPrompt, onPromptSaved }
                   placeholder="Or add custom testing philosophy requirement..."
                   value={customTestingPhilosophy}
                   onChange={(e) => setCustomTestingPhilosophy(e.target.value)}
+                  className="form-input"
+                />
+              </div>
+                </>
+              )}
+            </section>
+
+            {/* Design Styles Section */}
+            <section className="requirements-section">
+              <div 
+                className="section-header clickable"
+                onClick={() => toggleSection('designStyles')}
+                style={{ cursor: 'pointer' }}
+              >
+                <Palette size={18} />
+                <h2>Design Styles</h2>
+                {expandedSections.designStyles ? (
+                  <ChevronDown size={18} />
+                ) : (
+                  <ChevronRight size={18} />
+                )}
+              </div>
+              
+              {expandedSections.designStyles && (
+                <>
+              <div className="form-group">
+                <label>Design Style</label>
+                <div className="multi-select-container">
+                  {DESIGN_STYLES.map(item => (
+                    <button
+                      key={item}
+                      type="button"
+                      className={`multi-select-chip ${designStyles.includes(item) ? 'selected' : ''}`}
+                      onClick={() => toggleDesignStyle(item)}
+                    >
+                      {item}
+                      {designStyles.includes(item) && <Check size={12} />}
+                    </button>
+                  ))}
+                </div>
+                <input
+                  type="text"
+                  placeholder="Or add custom design style..."
+                  value={customDesignStyle}
+                  onChange={(e) => setCustomDesignStyle(e.target.value)}
+                  className="form-input"
+                />
+              </div>
+
+              <div className="form-group">
+                <label>Icon Library</label>
+                <div className="dropdown-with-custom">
+                  <select
+                    value={iconLibrary}
+                    onChange={(e) => {
+                      setIconLibrary(e.target.value)
+                      if (e.target.value) setCustomIconLibrary('')
+                    }}
+                    className="form-select"
+                  >
+                    <option value="">Select or add custom...</option>
+                    {ICON_LIBRARIES.map(lib => (
+                      <option key={lib} value={lib}>{lib}</option>
+                    ))}
+                  </select>
+                  {iconLibrary && (
+                    <button
+                      type="button"
+                      className="btn-clear-select"
+                      onClick={() => setIconLibrary('')}
+                    >
+                      <X size={14} />
+                    </button>
+                  )}
+                </div>
+                <input
+                  type="text"
+                  placeholder="Or enter custom icon library..."
+                  value={customIconLibrary}
+                  onChange={(e) => {
+                    setCustomIconLibrary(e.target.value)
+                    if (e.target.value) setIconLibrary('')
+                  }}
+                  className="form-input"
+                />
+              </div>
+
+              <div className="form-group">
+                <label>UI Framework</label>
+                <div className="dropdown-with-custom">
+                  <select
+                    value={uiFramework}
+                    onChange={(e) => {
+                      setUiFramework(e.target.value)
+                      if (e.target.value) setCustomUiFramework('')
+                    }}
+                    className="form-select"
+                  >
+                    <option value="">Select or add custom...</option>
+                    {UI_FRAMEWORKS.map(fw => (
+                      <option key={fw} value={fw}>{fw}</option>
+                    ))}
+                  </select>
+                  {uiFramework && (
+                    <button
+                      type="button"
+                      className="btn-clear-select"
+                      onClick={() => setUiFramework('')}
+                    >
+                      <X size={14} />
+                    </button>
+                  )}
+                </div>
+                <input
+                  type="text"
+                  placeholder="Or enter custom UI framework..."
+                  value={customUiFramework}
+                  onChange={(e) => {
+                    setCustomUiFramework(e.target.value)
+                    if (e.target.value) setUiFramework('')
+                  }}
+                  className="form-input"
+                />
+              </div>
+
+              <div className="form-group">
+                <label>Chart Library</label>
+                <div className="dropdown-with-custom">
+                  <select
+                    value={chartLibrary}
+                    onChange={(e) => {
+                      setChartLibrary(e.target.value)
+                      if (e.target.value) setCustomChartLibrary('')
+                    }}
+                    className="form-select"
+                  >
+                    <option value="">Select or add custom...</option>
+                    {CHART_LIBRARIES.map(lib => (
+                      <option key={lib} value={lib}>{lib}</option>
+                    ))}
+                  </select>
+                  {chartLibrary && (
+                    <button
+                      type="button"
+                      className="btn-clear-select"
+                      onClick={() => setChartLibrary('')}
+                    >
+                      <X size={14} />
+                    </button>
+                  )}
+                </div>
+                <input
+                  type="text"
+                  placeholder="Or enter custom chart library..."
+                  value={customChartLibrary}
+                  onChange={(e) => {
+                    setCustomChartLibrary(e.target.value)
+                    if (e.target.value) setChartLibrary('')
+                  }}
                   className="form-input"
                 />
               </div>

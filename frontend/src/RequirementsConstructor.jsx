@@ -541,6 +541,217 @@ function RequirementsConstructor({ onNavigateBack, loadedPrompt, onPromptSaved }
   // Track the last loaded prompt ID to prevent re-loading the same prompt
   const lastLoadedPromptId = useRef(null)
   
+  // Helper function to parse prompt content and extract field values
+  const parsePromptContent = useCallback((content) => {
+    if (!content || !content.trim()) return
+    
+    const sections = content.split(/\n\n(?=## )/g)
+    
+    sections.forEach(section => {
+      const lines = section.split('\n')
+      const header = lines[0]?.trim()
+      
+      if (header === '## Technical Architecture') {
+        const contentLines = lines.slice(1).join('\n')
+        const items = contentLines.split('\n').map(l => l.trim()).filter(l => l)
+        
+        items.forEach(item => {
+          const colonIndex = item.indexOf(':')
+          if (colonIndex === -1) return
+          
+          const key = item.substring(0, colonIndex).trim()
+          const value = item.substring(colonIndex + 1).trim()
+          
+          // Match keys and set corresponding state
+          if (key === 'Frontend Framework') {
+            // Check if value is in the options list
+            if (FRONTEND_FRAMEWORKS.includes(value)) {
+              setFrontendFramework(value)
+              setCustomFrontend('')
+            } else {
+              setFrontendFramework('')
+              setCustomFrontend(value)
+            }
+          } else if (key === 'Backend Framework') {
+            if (BACKEND_FRAMEWORKS.includes(value)) {
+              setBackendFramework(value)
+              setCustomBackend('')
+            } else {
+              setBackendFramework('')
+              setCustomBackend(value)
+            }
+          } else if (key === 'Database') {
+            if (DATABASES.includes(value)) {
+              setDatabase(value)
+              setCustomDatabase('')
+            } else {
+              setDatabase('')
+              setCustomDatabase(value)
+            }
+          } else if (key === 'Database Migrations') {
+            if (DATABASE_MIGRATIONS.includes(value)) {
+              setDatabaseMigrations(value)
+              setCustomDatabaseMigrations('')
+            } else {
+              setDatabaseMigrations('')
+              setCustomDatabaseMigrations(value)
+            }
+          } else if (key === 'Messaging') {
+            if (MESSAGING_SYSTEMS.includes(value)) {
+              setMessaging(value)
+              setCustomMessaging('')
+            } else {
+              setMessaging('')
+              setCustomMessaging(value)
+            }
+          } else if (key === 'Caching Strategy') {
+            const strategies = value.split(',').map(s => s.trim()).filter(s => s)
+            const validStrategies = strategies.filter(s => CACHING_STRATEGIES.includes(s))
+            const customStrategies = strategies.filter(s => !CACHING_STRATEGIES.includes(s))
+            setCachingStrategy(validStrategies)
+            setCustomCachingStrategy(customStrategies.join(', ') || '')
+          } else if (key === 'API Gateway') {
+            if (API_GATEWAYS.includes(value)) {
+              setApiGateway(value)
+              setCustomApiGateway('')
+            } else {
+              setApiGateway('')
+              setCustomApiGateway(value)
+            }
+          } else if (key === 'API & Contracts') {
+            if (API_CONTRACTS.includes(value)) {
+              setApiContracts(value)
+              setCustomApiContracts('')
+            } else {
+              setApiContracts('')
+              setCustomApiContracts(value)
+            }
+          } else if (key === 'Testing Framework') {
+            if (TESTING_FRAMEWORKS.includes(value)) {
+              setTestingFramework(value)
+              setCustomTesting('')
+            } else {
+              setTestingFramework('')
+              setCustomTesting(value)
+            }
+          } else if (key === 'API Testing') {
+            if (API_TESTING_TOOLS.includes(value)) {
+              setApiTesting(value)
+              setCustomApiTesting('')
+            } else {
+              setApiTesting('')
+              setCustomApiTesting(value)
+            }
+          } else if (key === 'Vector Database') {
+            if (VECTOR_DATABASES.includes(value)) {
+              setVectorDatabase(value)
+              setCustomVectorDatabase('')
+            } else {
+              setVectorDatabase('')
+              setCustomVectorDatabase(value)
+            }
+          } else if (key === 'Environment' || key === 'Docker and Environment') {
+            // Environment can be a multi-line value with multiple options
+            const envOptions = value.split('.,').map(o => o.trim().replace(/\.$/, '')).filter(o => o)
+            const validOptions = envOptions.filter(o => DOCKER_ENV_OPTIONS.includes(o))
+            const customOptions = envOptions.filter(o => !DOCKER_ENV_OPTIONS.includes(o))
+            if (validOptions.length > 0 || customOptions.length > 0) {
+              // Set valid options as array and custom options as string
+              setDockerEnv(validOptions)
+              setCustomDockerEnv(customOptions.join(', ') || '')
+            } else {
+              // If no valid options, treat entire value as custom
+              setDockerEnv([])
+              setCustomDockerEnv(value)
+            }
+          } else if (key === 'Observability') {
+            if (OBSERVABILITY_TOOLS.includes(value)) {
+              setObservability(value)
+              setCustomObservability('')
+            } else {
+              setObservability('')
+              setCustomObservability(value)
+            }
+          } else if (key === 'Security Defaults') {
+            if (SECURITY_DEFAULTS.includes(value)) {
+              setSecurityDefaults(value)
+              setCustomSecurityDefaults('')
+            } else {
+              setSecurityDefaults('')
+              setCustomSecurityDefaults(value)
+            }
+          } else if (key === 'Failure First Thinking') {
+            if (FAILURE_FIRST_OPTIONS.includes(value)) {
+              setFailureFirstThinking(value)
+              setCustomFailureFirstThinking('')
+            } else {
+              setFailureFirstThinking('')
+              setCustomFailureFirstThinking(value)
+            }
+          } else if (key === 'Testing Philosophy') {
+            if (TESTING_PHILOSOPHY_OPTIONS.includes(value)) {
+              setTestingPhilosophy(value)
+              setCustomTestingPhilosophy('')
+            } else {
+              setTestingPhilosophy('')
+              setCustomTestingPhilosophy(value)
+            }
+          } else if (key === 'Model Validation') {
+            if (VALIDATION_LIBRARIES.includes(value)) {
+              setModelValidation(value)
+              setCustomModelValidation('')
+            } else {
+              setModelValidation('')
+              setCustomModelValidation(value)
+            }
+          } else if (key === 'Design Style') {
+            if (DESIGN_STYLES.includes(value)) {
+              setDesignStyle(value)
+              setCustomDesignStyle('')
+            } else {
+              setDesignStyle('')
+              setCustomDesignStyle(value)
+            }
+          } else if (key === 'Icon Library') {
+            if (ICON_LIBRARIES.includes(value)) {
+              setIconLibrary(value)
+              setCustomIconLibrary('')
+            } else {
+              setIconLibrary('')
+              setCustomIconLibrary(value)
+            }
+          } else if (key === 'UI Framework') {
+            if (UI_FRAMEWORKS.includes(value)) {
+              setUiFramework(value)
+              setCustomUiFramework('')
+            } else {
+              setUiFramework('')
+              setCustomUiFramework(value)
+            }
+          } else if (key === 'Chart Library') {
+            if (CHART_LIBRARIES.includes(value)) {
+              setChartLibrary(value)
+              setCustomChartLibrary('')
+            } else {
+              setChartLibrary('')
+              setCustomChartLibrary(value)
+            }
+          } else if (key === 'AI Framework') {
+            if (AI_FRAMEWORKS.includes(value)) {
+              setAiFramework(value)
+              setCustomAiFramework('')
+            } else {
+              setAiFramework('')
+              setCustomAiFramework(value)
+            }
+          }
+          // Note: Fields that don't match any pattern will be preserved in the prompt
+          // but won't populate form fields. This is intentional to support custom fields.
+        })
+      }
+    })
+  }, [])
+  
   // Load prompt when loadedPrompt prop changes (only once when prop changes)
   useEffect(() => {
     if (loadedPrompt && loadedPrompt.content) {
@@ -555,8 +766,11 @@ function RequirementsConstructor({ onNavigateBack, loadedPrompt, onPromptSaved }
         setHasLoadedPrompt(true)
         setSaveMode('update') // Default to update mode when loading a prompt
         lastLoadedPromptId.current = promptId
+        // Parse and populate form fields from the loaded prompt first
+        parsePromptContent(content)
         // Initialize lastAutoGenerated to empty so merge works correctly
         // The merge will use the loaded content (prev) as baseline
+        // After form fields are populated, autoGeneratedPrompt will update and lastAutoGenerated will be set
         setLastAutoGenerated('')
         showToast('Prompt loaded into constructor!')
       }
@@ -566,7 +780,7 @@ function RequirementsConstructor({ onNavigateBack, loadedPrompt, onPromptSaved }
       setHasLoadedPrompt(false)
       setSaveMode('create') // Default to create mode when no prompt is loaded
     }
-  }, [loadedPrompt, showToast]) // Only depend on loadedPrompt, not editedPrompt
+  }, [loadedPrompt, showToast, parsePromptContent]) // Only depend on loadedPrompt, not editedPrompt
 
   const toggleSection = (section) => {
     setExpandedSections(prev => ({
@@ -972,6 +1186,8 @@ function RequirementsConstructor({ onNavigateBack, loadedPrompt, onPromptSaved }
             })
             
             // Remove items from existingItemMap that are not in newItems (they were cleared)
+            // This is critical for loaded prompts where previousAutoGenerated is empty
+            // If newItems is empty, remove ALL auto-generated items (all were cleared)
             // Only remove auto-generated items, not custom items
             const keysToRemove = []
             existingItemMap.forEach((value, key) => {
@@ -982,7 +1198,8 @@ function RequirementsConstructor({ onNavigateBack, loadedPrompt, onPromptSaved }
                 value.includes('Environment:') || value.includes('Observability:') || value.includes('Security Defaults:') ||
                 value.includes('Failure First Thinking:') || value.includes('Testing Philosophy:') || value.includes('Model Validation:') ||
                 value.includes('Design Style:') || value.includes('Icon Library:') || value.includes('UI Framework:') || value.includes('Chart Library:')
-              if (isAutoGenerated && !newItemKeys.has(key)) {
+              // Remove if it's auto-generated and (newItems is empty OR not in the new items)
+              if (isAutoGenerated && (newItems.length === 0 || !newItemKeys.has(key))) {
                 keysToRemove.push(key)
               }
             })

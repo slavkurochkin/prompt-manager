@@ -31,7 +31,8 @@ import {
   Filter,
   Gauge,
   BookOpen,
-  Code
+  Code,
+  Upload
 } from 'lucide-react'
 import Notes from './Notes'
 import RequirementsConstructor from './RequirementsConstructor'
@@ -360,6 +361,8 @@ function App() {
   const [prompts, setPrompts] = useState([])
   const [title, setTitle] = useState('')
   const [content, setContent] = useState('')
+  const [promptToLoad, setPromptToLoad] = useState(null) // Prompt to load into constructor
+  const [constructorKey, setConstructorKey] = useState(0) // Key to force remount when loading prompt
   const [model, setModel] = useState('')
   const [note, setNote] = useState('')
   const [rating, setRating] = useState(0)
@@ -875,11 +878,25 @@ function App() {
     )
   }
 
+  // Load prompt into constructor
+  const handleLoadIntoConstructor = (prompt) => {
+    setPromptToLoad(prompt)
+    setConstructorKey(prev => prev + 1) // Force component remount
+    setCurrentPage('requirements')
+  }
+
   // If on Requirements Constructor page, render RequirementsConstructor component
   if (currentPage === 'requirements') {
     return (
       <>
-        <RequirementsConstructor onNavigateBack={() => setCurrentPage('prompts')} />
+        <RequirementsConstructor 
+          onNavigateBack={() => {
+            setCurrentPage('prompts')
+            setPromptToLoad(null) // Clear loaded prompt when navigating back
+          }}
+          loadedPrompt={promptToLoad}
+          key={constructorKey} // Force remount when loading a new prompt
+        />
         {toast && (
           <div className={`toast ${toast.type}`}>
             {toast.type === 'success' ? <CheckCircle size={16} /> : <AlertCircle size={16} />}
@@ -1298,6 +1315,13 @@ function App() {
                         size={14}
                       />
                     </div>
+                    <button
+                      className="btn btn-load-constructor"
+                      onClick={() => handleLoadIntoConstructor(prompt)}
+                      title="Load into Requirements Constructor"
+                    >
+                      <Upload size={14} />
+                    </button>
                     <button
                       className={`btn btn-copy ${copiedId === prompt.id ? 'copied' : ''}`}
                       onClick={() => handleCopy(prompt.id, prompt.content)}

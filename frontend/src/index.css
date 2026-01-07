@@ -1514,7 +1514,8 @@ body::before {
 }
 
 /* Copy button */
-.btn-copy {
+.btn-copy,
+.btn-load-constructor {
   padding: 0.4rem 0.6rem;
   font-size: 0.8rem;
   background: var(--bg-tertiary);
@@ -1522,7 +1523,8 @@ body::before {
   border: 1px solid transparent;
 }
 
-.btn-copy:hover {
+.btn-copy:hover,
+.btn-load-constructor:hover {
   background: var(--accent-subtle);
   color: var(--accent-primary);
 }
@@ -2870,7 +2872,8 @@ body::before {
 
 .btn-copy-prompt,
 .btn-toggle-edit,
-.btn-reset-prompt {
+.btn-reset-prompt,
+.btn-save-prompt {
   display: inline-flex;
   align-items: center;
   gap: 0.5rem;
@@ -2888,10 +2891,16 @@ body::before {
 
 .btn-copy-prompt:hover,
 .btn-toggle-edit:hover,
-.btn-reset-prompt:hover {
+.btn-reset-prompt:hover,
+.btn-save-prompt:hover:not(:disabled) {
   background: var(--accent-primary);
   color: var(--bg-primary);
   border-color: var(--accent-primary);
+}
+
+.btn-save-prompt:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 .btn-toggle-edit {

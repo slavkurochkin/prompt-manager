@@ -2285,21 +2285,7 @@ function RequirementsConstructor({ onNavigateBack, loadedPrompt, onPromptSaved }
       
       {/* Toast Notification */}
       {toast && (
-        <div className={`toast ${toast.type}`} style={{
-          position: 'fixed',
-          bottom: '24px',
-          right: '24px',
-          padding: '12px 16px',
-          borderRadius: '8px',
-          backgroundColor: toast.type === 'success' ? '#22c55e' : '#ef4444',
-          color: 'white',
-          display: 'flex',
-          alignItems: 'center',
-          gap: '8px',
-          boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
-          zIndex: 1000,
-          animation: 'slideIn 0.3s ease-out'
-        }}>
+        <div className={`toast ${toast.type}`}>
           {toast.type === 'success' ? <CheckCircle size={16} /> : <AlertCircle size={16} />}
           <span>{toast.message}</span>
         </div>

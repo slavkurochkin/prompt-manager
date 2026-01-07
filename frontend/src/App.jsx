@@ -383,6 +383,8 @@ function App() {
   const [editingTagsId, setEditingTagsId] = useState(null)
   const [editingTagsValue, setEditingTagsValue] = useState([])
   const [editingTagInput, setEditingTagInput] = useState('')
+  const [editingPromptId, setEditingPromptId] = useState(null)
+  const [editingPromptData, setEditingPromptData] = useState(null)
 
   // Calculate token count for current content
   const tokenCount = useMemo(() => {
@@ -608,6 +610,75 @@ function App() {
     } catch (err) {
       showToast('Failed to update tags', 'error')
       console.error('Tags error:', err)
+    }
+  }
+
+  // Start editing prompt
+  const startEditingPrompt = (prompt) => {
+    setEditingPromptId(prompt.id)
+    setEditingPromptData({
+      title: prompt.title || '',
+      content: prompt.content || '',
+      model: prompt.model || '',
+      rating: prompt.rating || 0,
+      note: prompt.note || '',
+      tags: prompt.tags || []
+    })
+    setTagInput('') // Clear tag input when opening modal
+  }
+
+  // Cancel editing prompt
+  const cancelEditingPrompt = () => {
+    setEditingPromptId(null)
+    setEditingPromptData(null)
+    setTagInput('') // Clear tag input when closing modal
+  }
+
+  // Update prompt
+  const handleUpdatePrompt = async (e) => {
+    e.preventDefault()
+    
+    if (!editingPromptData.title.trim() || !editingPromptData.content.trim()) {
+      showToast('Please fill in both title and content', 'error')
+      return
+    }
+
+    try {
+      setSaving(true)
+      const tokenCount = (() => {
+        if (!editingPromptData.content.trim()) return 0
+        try {
+          return encode(editingPromptData.content).length
+        } catch {
+          return Math.ceil(editingPromptData.content.length / 4)
+        }
+      })()
+
+      const response = await fetch(`${API_BASE}/${editingPromptId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          title: editingPromptData.title.trim(), 
+          content: editingPromptData.content.trim(),
+          model: editingPromptData.model.trim() || null,
+          token_count: tokenCount,
+          rating: editingPromptData.rating,
+          note: editingPromptData.note.trim() || null,
+          tags: editingPromptData.tags
+        }),
+      })
+
+      if (!response.ok) throw new Error('Failed to update prompt')
+
+      const updatedPrompt = await response.json()
+      setPrompts(prev => prev.map(p => p.id === editingPromptId ? updatedPrompt : p))
+      cancelEditingPrompt()
+      showToast('Prompt updated successfully!')
+    } catch (err) {
+      showToast('Failed to update prompt', 'error')
+      console.error('Update error:', err)
+    } finally {
+      setSaving(false)
     }
   }
 
@@ -1317,6 +1388,13 @@ function App() {
                       />
                     </div>
                     <button
+                      className="btn btn-edit"
+                      onClick={() => startEditingPrompt(prompt)}
+                      title="Edit prompt"
+                    >
+                      <Pencil size={14} />
+                    </button>
+                    <button
                       className="btn btn-load-constructor"
                       onClick={() => handleLoadIntoConstructor(prompt)}
                       title="Load into Requirements Constructor"
@@ -1486,6 +1564,172 @@ function App() {
           position={confidencePopover.position}
           onClose={() => setConfidencePopover(null)}
         />
+      )}
+
+      {/* Edit Prompt Modal */}
+      {editingPromptId && editingPromptData && (
+        <>
+          <div className="modal-backdrop" onClick={cancelEditingPrompt} />
+          <div className="modal" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h2>Edit Prompt</h2>
+              <button
+                className="modal-close"
+                onClick={cancelEditingPrompt}
+                title="Close"
+              >
+                <X size={20} />
+              </button>
+            </div>
+            <form className="modal-form" onSubmit={handleUpdatePrompt}>
+              <div className="form-row">
+                <div className="form-group form-group-title">
+                  <label htmlFor="edit-title">Title</label>
+                  <input
+                    type="text"
+                    id="edit-title"
+                    value={editingPromptData.title}
+                    onChange={(e) => setEditingPromptData(prev => ({ ...prev, title: e.target.value }))}
+                    placeholder="Give your prompt a memorable name..."
+                    disabled={saving}
+                    required
+                  />
+                </div>
+                
+                <div className="form-group form-group-model">
+                  <label htmlFor="edit-model">Model</label>
+                  <input
+                    type="text"
+                    id="edit-model"
+                    value={editingPromptData.model}
+                    onChange={(e) => setEditingPromptData(prev => ({ ...prev, model: e.target.value }))}
+                    placeholder="e.g., GPT-4, Claude 3.5..."
+                    disabled={saving}
+                  />
+                </div>
+
+                <div className="form-group form-group-rating">
+                  <label>Rating</label>
+                  <StarRating 
+                    value={editingPromptData.rating} 
+                    onChange={(newRating) => setEditingPromptData(prev => ({ ...prev, rating: newRating }))}
+                    hoverValue={hoverRating}
+                    onHover={setHoverRating}
+                    size={20}
+                  />
+                </div>
+              </div>
+              
+              <div className="form-group">
+                <label htmlFor="edit-content">Prompt Content</label>
+                <textarea
+                  id="edit-content"
+                  value={editingPromptData.content}
+                  onChange={(e) => setEditingPromptData(prev => ({ ...prev, content: e.target.value }))}
+                  placeholder="Enter your prompt template here..."
+                  disabled={saving}
+                  required
+                  rows={8}
+                />
+              </div>
+
+              <div className="form-group">
+                <label htmlFor="edit-note">
+                  <StickyNote size={14} strokeWidth={2} style={{ display: 'inline', verticalAlign: 'middle', marginRight: '0.35rem' }} />
+                  Note <span style={{ color: 'var(--text-muted)', fontWeight: 400 }}>(optional)</span>
+                </label>
+                <input
+                  type="text"
+                  id="edit-note"
+                  value={editingPromptData.note}
+                  onChange={(e) => setEditingPromptData(prev => ({ ...prev, note: e.target.value }))}
+                  placeholder="Add a note about this prompt..."
+                  disabled={saving}
+                />
+              </div>
+
+              <div className="form-group">
+                <label htmlFor="edit-tags">
+                  <Tag size={14} strokeWidth={2} style={{ display: 'inline', verticalAlign: 'middle', marginRight: '0.35rem' }} />
+                  Tags <span style={{ color: 'var(--text-muted)', fontWeight: 400 }}>(optional)</span>
+                </label>
+                <div className="tags-input-container">
+                  {editingPromptData.tags.map((tag) => (
+                    <span key={tag} className="tag-chip">
+                      {tag}
+                      <button 
+                        type="button" 
+                        onClick={() => setEditingPromptData(prev => ({ ...prev, tags: prev.tags.filter(t => t !== tag) }))}
+                        className="tag-remove"
+                        disabled={saving}
+                      >
+                        <X size={12} />
+                      </button>
+                    </span>
+                  ))}
+                  <input
+                    type="text"
+                    id="edit-tags"
+                    value={tagInput}
+                    onChange={(e) => setTagInput(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' || e.key === ',') {
+                        e.preventDefault()
+                        const trimmed = tagInput.trim().toLowerCase()
+                        if (trimmed && !editingPromptData.tags.includes(trimmed)) {
+                          setEditingPromptData(prev => ({ ...prev, tags: [...prev.tags, trimmed] }))
+                        }
+                        setTagInput('')
+                      } else if (e.key === 'Backspace' && !tagInput && editingPromptData.tags.length > 0) {
+                        setEditingPromptData(prev => ({ ...prev, tags: prev.tags.slice(0, -1) }))
+                      }
+                    }}
+                    onBlur={() => {
+                      if (tagInput.trim()) {
+                        const trimmed = tagInput.trim().toLowerCase()
+                        if (trimmed && !editingPromptData.tags.includes(trimmed)) {
+                          setEditingPromptData(prev => ({ ...prev, tags: [...prev.tags, trimmed] }))
+                        }
+                        setTagInput('')
+                      }
+                    }}
+                    placeholder={editingPromptData.tags.length === 0 ? "Type and press Enter to add tags..." : "Add more..."}
+                    disabled={saving}
+                    className="tag-input"
+                  />
+                </div>
+              </div>
+              
+              <div className="modal-actions">
+                <button 
+                  type="button"
+                  className="btn btn-secondary"
+                  onClick={cancelEditingPrompt}
+                  disabled={saving}
+                >
+                  Cancel
+                </button>
+                <button 
+                  type="submit" 
+                  className="btn btn-primary"
+                  disabled={saving || !editingPromptData.title.trim() || !editingPromptData.content.trim()}
+                >
+                  {saving ? (
+                    <>
+                      <Loader2 size={16} className="spin" />
+                      Updating...
+                    </>
+                  ) : (
+                    <>
+                      <Save size={16} strokeWidth={2} />
+                      Update Prompt
+                    </>
+                  )}
+                </button>
+              </div>
+            </form>
+          </div>
+        </>
       )}
 
       {/* Toast Notification */}

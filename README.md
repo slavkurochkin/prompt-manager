@@ -4,7 +4,7 @@ A comprehensive full-stack application for managing AI prompts, building require
 
 ## 🎥 Video Walkthrough
 
-[![Video Walkthrough - Requirements Constructor](https://img.youtube.com/vi/10RZIlMgyMk/maxresdefault.jpg)](https://youtu.be/10RZIlMgyMk)
+[![Video Walkthrough - Requirements Constructor](./assets/view.png)](https://youtu.be/10RZIlMgyMk)
 
 **Watch the full walkthrough:** [https://youtu.be/10RZIlMgyMk](https://youtu.be/10RZIlMgyMk)
 

@@ -13,6 +13,7 @@ const createNoteSchema = Joi.object({
   
   content: Joi.string()
     .trim()
+    .allow('')
     .optional()
     .default('')
     .messages({
@@ -57,6 +58,7 @@ const updateNoteSchema = Joi.object({
   
   content: Joi.string()
     .trim()
+    .allow('')
     .optional()
     .messages({
       'string.base': 'Content must be a string'

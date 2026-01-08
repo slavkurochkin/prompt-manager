@@ -55,6 +55,47 @@ const BACKEND_FRAMEWORKS = [
   'ASP.NET Core'
 ]
 
+const SERVICE_TYPES = [
+  'Monolith',
+  'Microservices',
+  'Serverless',
+  'Service-Oriented Architecture (SOA)',
+  'Modular Monolith',
+  'Event-Driven Architecture',
+  'Layered Architecture',
+  'Hexagonal Architecture',
+  'Clean Architecture'
+]
+
+const AUTHENTICATION_METHODS = [
+  'JWT (JSON Web Tokens)',
+  'OAuth 2.0',
+  'OAuth 1.0',
+  'OpenID Connect (OIDC)',
+  'Session-based',
+  'API Keys',
+  'Basic Authentication',
+  'Bearer Token',
+  'HMAC',
+  'SAML',
+  'LDAP',
+  'Active Directory',
+  'Custom Token System'
+]
+
+const AUTHORIZATION_LEVELS = [
+  'Public',
+  'Authenticated',
+  'User',
+  'Admin',
+  'Super Admin',
+  'Moderator',
+  'Guest',
+  'Read-only',
+  'Write',
+  'Owner'
+]
+
 const DATABASES = [
   'PostgreSQL',
   'MySQL',
@@ -485,6 +526,12 @@ function RequirementsConstructor({ onNavigateBack, loadedPrompt, onPromptSaved }
   const [customFrontend, setCustomFrontend] = useState('')
   const [backendFramework, setBackendFramework] = useState('')
   const [customBackend, setCustomBackend] = useState('')
+  const [serviceTypes, setServiceTypes] = useState([])
+  const [customServiceType, setCustomServiceType] = useState('')
+  const [authenticationMethods, setAuthenticationMethods] = useState([])
+  const [customAuthenticationMethod, setCustomAuthenticationMethod] = useState('')
+  const [authorizationLevels, setAuthorizationLevels] = useState([])
+  const [customAuthorizationLevel, setCustomAuthorizationLevel] = useState('')
   const [database, setDatabase] = useState('')
   const [customDatabase, setCustomDatabase] = useState('')
   const [databaseMigrations, setDatabaseMigrations] = useState('')
@@ -624,6 +671,24 @@ function RequirementsConstructor({ onNavigateBack, loadedPrompt, onPromptSaved }
               setBackendFramework('')
               setCustomBackend(value)
             }
+          } else if (key === 'Service Type') {
+            const types = value.split(',').map(s => s.trim()).filter(s => s)
+            const validTypes = types.filter(s => SERVICE_TYPES.includes(s))
+            const customTypes = types.filter(s => !SERVICE_TYPES.includes(s))
+            setServiceTypes(validTypes)
+            setCustomServiceType(customTypes.join(', ') || '')
+          } else if (key === 'Authentication Methods') {
+            const methods = value.split(',').map(s => s.trim()).filter(s => s)
+            const validMethods = methods.filter(s => AUTHENTICATION_METHODS.includes(s))
+            const customMethods = methods.filter(s => !AUTHENTICATION_METHODS.includes(s))
+            setAuthenticationMethods(validMethods)
+            setCustomAuthenticationMethod(customMethods.join(', ') || '')
+          } else if (key === 'Authorization Levels') {
+            const levels = value.split(',').map(s => s.trim()).filter(s => s)
+            const validLevels = levels.filter(s => AUTHORIZATION_LEVELS.includes(s))
+            const customLevels = levels.filter(s => !AUTHORIZATION_LEVELS.includes(s))
+            setAuthorizationLevels(validLevels)
+            setCustomAuthorizationLevel(customLevels.join(', ') || '')
           } else if (key === 'Database') {
             if (DATABASES.includes(value)) {
               setDatabase(value)
@@ -919,6 +984,12 @@ function RequirementsConstructor({ onNavigateBack, loadedPrompt, onPromptSaved }
     setCustomFrontend('')
     setBackendFramework('')
     setCustomBackend('')
+    setServiceTypes([])
+    setCustomServiceType('')
+    setAuthenticationMethods([])
+    setCustomAuthenticationMethod('')
+    setAuthorizationLevels([])
+    setCustomAuthorizationLevel('')
     setDatabase('')
     setCustomDatabase('')
     setDatabaseMigrations('')
@@ -1054,6 +1125,24 @@ function RequirementsConstructor({ onNavigateBack, loadedPrompt, onPromptSaved }
     
     if (backendFramework || customBackend) {
       techArch.push(`Backend Framework: ${backendFramework || customBackend}`)
+    }
+    
+    if (serviceTypes.length > 0 || customServiceType) {
+      const serviceTypeList = [...serviceTypes]
+      if (customServiceType) serviceTypeList.push(customServiceType)
+      techArch.push(`Service Type: ${serviceTypeList.join(', ')}`)
+    }
+    
+    if (authenticationMethods.length > 0 || customAuthenticationMethod) {
+      const authMethodList = [...authenticationMethods]
+      if (customAuthenticationMethod) authMethodList.push(customAuthenticationMethod)
+      techArch.push(`Authentication Methods: ${authMethodList.join(', ')}`)
+    }
+    
+    if (authorizationLevels.length > 0 || customAuthorizationLevel) {
+      const authLevelList = [...authorizationLevels]
+      if (customAuthorizationLevel) authLevelList.push(customAuthorizationLevel)
+      techArch.push(`Authorization Levels: ${authLevelList.join(', ')}`)
     }
     
     if (database || customDatabase) {
@@ -1238,6 +1327,9 @@ function RequirementsConstructor({ onNavigateBack, loadedPrompt, onPromptSaved }
     systemPrompts, customSystemPrompt,
     frontendFramework, customFrontend,
     backendFramework, customBackend,
+    serviceTypes, customServiceType,
+    authenticationMethods, customAuthenticationMethod,
+    authorizationLevels, customAuthorizationLevel,
     database, customDatabase,
     databaseMigrations, customDatabaseMigrations,
     messaging, customMessaging,
@@ -1322,7 +1414,8 @@ function RequirementsConstructor({ onNavigateBack, loadedPrompt, onPromptSaved }
                   item.includes('Gateway:') || item.includes('Contracts:') || item.includes('Testing:') ||
                   item.includes('Environment:') || item.includes('Observability:') || item.includes('Security Defaults:') ||
                   item.includes('Failure First Thinking:') || item.includes('Testing Philosophy:') || item.includes('Model Validation:') ||
-                  item.includes('Design Style:') || item.includes('Icon Library:') || item.includes('UI Framework:') || item.includes('Chart Library:')
+                  item.includes('Design Style:') || item.includes('Icon Library:') || item.includes('UI Framework:') || item.includes('Chart Library:') ||
+                  item.includes('Service Type:') || item.includes('Authentication Methods:') || item.includes('Authorization Levels:')
                 )
                 return !isAutoGenerated
               })
@@ -1469,7 +1562,8 @@ function RequirementsConstructor({ onNavigateBack, loadedPrompt, onPromptSaved }
                 value.includes('Gateway:') || value.includes('Contracts:') || value.includes('Testing:') ||
                 value.includes('Environment:') || value.includes('Observability:') || value.includes('Security Defaults:') ||
                 value.includes('Failure First Thinking:') || value.includes('Testing Philosophy:') || value.includes('Model Validation:') ||
-                value.includes('Design Style:') || value.includes('Icon Library:') || value.includes('UI Framework:') || value.includes('Chart Library:')
+                value.includes('Design Style:') || value.includes('Icon Library:') || value.includes('UI Framework:') || value.includes('Chart Library:') ||
+                value.includes('Service Type:') || value.includes('Authentication Methods:') || value.includes('Authorization Levels:')
               // Remove if it's auto-generated and (newItems is empty OR not in the new items)
               if (isAutoGenerated && (newItems.length === 0 || !newItemKeys.has(key))) {
                 keysToRemove.push(key)
@@ -1497,7 +1591,8 @@ function RequirementsConstructor({ onNavigateBack, loadedPrompt, onPromptSaved }
                 item.includes('Gateway:') || item.includes('Contracts:') || item.includes('Testing:') ||
                 item.includes('Environment:') || item.includes('Observability:') || item.includes('Security Defaults:') ||
                 item.includes('Failure First Thinking:') || item.includes('Testing Philosophy:') || item.includes('Model Validation:') ||
-                item.includes('Design Style:') || item.includes('Icon Library:') || item.includes('UI Framework:') || item.includes('Chart Library:')
+                item.includes('Design Style:') || item.includes('Icon Library:') || item.includes('UI Framework:') || item.includes('Chart Library:') ||
+                item.includes('Service Type:') || item.includes('Authentication Methods:') || item.includes('Authorization Levels:')
               )
             })
             
@@ -1622,7 +1717,10 @@ function RequirementsConstructor({ onNavigateBack, loadedPrompt, onPromptSaved }
               item.includes('Design Style:') ||
               item.includes('Icon Library:') ||
               item.includes('UI Framework:') ||
-              item.includes('Chart Library:')
+              item.includes('Chart Library:') ||
+              item.includes('Service Type:') ||
+              item.includes('Authentication Methods:') ||
+              item.includes('Authorization Levels:')
             )
             
             if (isAutoGenerated && key) {
@@ -1663,7 +1761,8 @@ function RequirementsConstructor({ onNavigateBack, loadedPrompt, onPromptSaved }
                   item.includes('Gateway:') || item.includes('Contracts:') || item.includes('Testing:') ||
                   item.includes('Environment:') || item.includes('Observability:') || item.includes('Security Defaults:') ||
                   item.includes('Failure First Thinking:') || item.includes('Testing Philosophy:') || item.includes('Model Validation:') ||
-                  item.includes('Design Style:') || item.includes('Icon Library:') || item.includes('UI Framework:') || item.includes('Chart Library:')
+                  item.includes('Design Style:') || item.includes('Icon Library:') || item.includes('UI Framework:') || item.includes('Chart Library:') ||
+                  item.includes('Service Type:') || item.includes('Authentication Methods:') || item.includes('Authorization Levels:')
                 )
                 if (isAutoGenerated && key) {
                   prevItemKeys.add(key)
@@ -1732,7 +1831,8 @@ function RequirementsConstructor({ onNavigateBack, loadedPrompt, onPromptSaved }
               item.includes('Gateway:') || item.includes('Contracts:') || item.includes('Testing:') ||
               item.includes('Environment:') || item.includes('Observability:') || item.includes('Security Defaults:') ||
               item.includes('Failure First Thinking:') || item.includes('Testing Philosophy:') || item.includes('Model Validation:') ||
-              item.includes('Design Style:') || item.includes('Icon Library:') || item.includes('UI Framework:') || item.includes('Chart Library:')
+              item.includes('Design Style:') || item.includes('Icon Library:') || item.includes('UI Framework:') || item.includes('Chart Library:') ||
+              item.includes('Service Type:') || item.includes('Authentication Methods:') || item.includes('Authorization Levels:')
             )
           })
           
@@ -1835,7 +1935,10 @@ function RequirementsConstructor({ onNavigateBack, loadedPrompt, onPromptSaved }
             item.includes('Design Style:') ||
             item.includes('Icon Library:') ||
             item.includes('UI Framework:') ||
-            item.includes('Chart Library:')
+            item.includes('Chart Library:') ||
+            item.includes('Service Type:') ||
+            item.includes('Authentication Methods:') ||
+            item.includes('Authorization Levels:')
           )
           
           // Remove if it's an auto-generated item that should be removed
@@ -2091,6 +2194,30 @@ function RequirementsConstructor({ onNavigateBack, loadedPrompt, onPromptSaved }
     )
   }
 
+  const toggleServiceType = (item) => {
+    setServiceTypes(prev => 
+      prev.includes(item) 
+        ? prev.filter(i => i !== item)
+        : [...prev, item]
+    )
+  }
+
+  const toggleAuthenticationMethod = (item) => {
+    setAuthenticationMethods(prev => 
+      prev.includes(item) 
+        ? prev.filter(i => i !== item)
+        : [...prev, item]
+    )
+  }
+
+  const toggleAuthorizationLevel = (item) => {
+    setAuthorizationLevels(prev => 
+      prev.includes(item) 
+        ? prev.filter(i => i !== item)
+        : [...prev, item]
+    )
+  }
+
   const toggleObservabilityOptions = (item) => {
     setObservabilityOptions(prev => 
       prev.includes(item) 
@@ -2237,7 +2364,7 @@ function RequirementsConstructor({ onNavigateBack, loadedPrompt, onPromptSaved }
                 <Settings size={18} />
                 <h2>Technical Architecture</h2>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginLeft: 'auto' }}>
-                  {(frontendFramework || customFrontend || backendFramework || customBackend || database || customDatabase || databaseMigrations || customDatabaseMigrations || messaging || customMessaging || cachingStrategy.length > 0 || customCachingStrategy || apiGateway || customApiGateway || apiContracts || customApiContracts || testingFramework || customTesting || apiTesting || customApiTesting || apiTestingOptions.length > 0 || customApiTestingOptions || aiFramework || customAiFramework || aiFrameworkOptions.length > 0 || customAiFrameworkOptions || vectorDatabase || customVectorDatabase || aiTesting || customAiTesting || aiTestingOptions.length > 0 || customAiTestingOptions || dockerEnv.length > 0 || customDockerEnv || observability || customObservability || observabilityOptions.length > 0 || customObservabilityOptions || securityDefaults.length > 0 || customSecurity || failureFirst.length > 0 || customFailureFirst || testingPhilosophy.length > 0 || customTestingPhilosophy || modelValidation || customModelValidation || chartLibrary || customChartLibrary) && (
+                  {(frontendFramework || customFrontend || backendFramework || customBackend || serviceTypes.length > 0 || customServiceType || authenticationMethods.length > 0 || customAuthenticationMethod || authorizationLevels.length > 0 || customAuthorizationLevel || database || customDatabase || databaseMigrations || customDatabaseMigrations || messaging || customMessaging || cachingStrategy.length > 0 || customCachingStrategy || apiGateway || customApiGateway || apiContracts || customApiContracts || testingFramework || customTesting || apiTesting || customApiTesting || apiTestingOptions.length > 0 || customApiTestingOptions || aiFramework || customAiFramework || aiFrameworkOptions.length > 0 || customAiFrameworkOptions || vectorDatabase || customVectorDatabase || aiTesting || customAiTesting || aiTestingOptions.length > 0 || customAiTestingOptions || dockerEnv.length > 0 || customDockerEnv || observability || customObservability || observabilityOptions.length > 0 || customObservabilityOptions || securityDefaults.length > 0 || customSecurity || failureFirst.length > 0 || customFailureFirst || testingPhilosophy.length > 0 || customTestingPhilosophy || modelValidation || customModelValidation || chartLibrary || customChartLibrary) && (
                     <button
                       type="button"
                       onClick={clearTechnicalArchitecture}
@@ -2357,6 +2484,78 @@ function RequirementsConstructor({ onNavigateBack, loadedPrompt, onPromptSaved }
                     setCustomBackend(e.target.value)
                     if (e.target.value) setBackendFramework('')
                   }}
+                  className="form-input"
+                />
+              </div>
+
+              <div className="form-group">
+                <label>Service Type</label>
+                <div className="multi-select-container">
+                  {SERVICE_TYPES.map(item => (
+                    <button
+                      key={item}
+                      type="button"
+                      className={`multi-select-chip ${serviceTypes.includes(item) ? 'selected' : ''}`}
+                      onClick={() => toggleServiceType(item)}
+                    >
+                      {item}
+                      {serviceTypes.includes(item) && <Check size={12} />}
+                    </button>
+                  ))}
+                </div>
+                <input
+                  type="text"
+                  placeholder="Or add custom service type..."
+                  value={customServiceType}
+                  onChange={(e) => setCustomServiceType(e.target.value)}
+                  className="form-input"
+                />
+              </div>
+
+              <div className="form-group">
+                <label>Authentication Methods</label>
+                <div className="multi-select-container">
+                  {AUTHENTICATION_METHODS.map(item => (
+                    <button
+                      key={item}
+                      type="button"
+                      className={`multi-select-chip ${authenticationMethods.includes(item) ? 'selected' : ''}`}
+                      onClick={() => toggleAuthenticationMethod(item)}
+                    >
+                      {item}
+                      {authenticationMethods.includes(item) && <Check size={12} />}
+                    </button>
+                  ))}
+                </div>
+                <input
+                  type="text"
+                  placeholder="Or add custom authentication method..."
+                  value={customAuthenticationMethod}
+                  onChange={(e) => setCustomAuthenticationMethod(e.target.value)}
+                  className="form-input"
+                />
+              </div>
+
+              <div className="form-group">
+                <label>Authorization Levels</label>
+                <div className="multi-select-container">
+                  {AUTHORIZATION_LEVELS.map(item => (
+                    <button
+                      key={item}
+                      type="button"
+                      className={`multi-select-chip ${authorizationLevels.includes(item) ? 'selected' : ''}`}
+                      onClick={() => toggleAuthorizationLevel(item)}
+                    >
+                      {item}
+                      {authorizationLevels.includes(item) && <Check size={12} />}
+                    </button>
+                  ))}
+                </div>
+                <input
+                  type="text"
+                  placeholder="Or add custom authorization level..."
+                  value={customAuthorizationLevel}
+                  onChange={(e) => setCustomAuthorizationLevel(e.target.value)}
                   className="form-input"
                 />
               </div>

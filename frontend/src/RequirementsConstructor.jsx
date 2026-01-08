@@ -24,7 +24,10 @@ import {
   AlertCircle,
   CheckCircle,
   Loader2,
-  Palette
+  Palette,
+  Wand2,
+  ArrowRight,
+  XCircle
 } from 'lucide-react'
 
 const FRONTEND_FRAMEWORKS = [
@@ -467,6 +470,11 @@ function RequirementsConstructor({ onNavigateBack, loadedPrompt, onPromptSaved }
   const [promptTitle, setPromptTitle] = useState(loadedPrompt?.title || '')
   const [hasLoadedPrompt, setHasLoadedPrompt] = useState(!!loadedPrompt)
   const [saveMode, setSaveMode] = useState('update') // 'update' or 'create'
+  
+  // AI Refinement
+  const [refinedPrompt, setRefinedPrompt] = useState(null)
+  const [isRefining, setIsRefining] = useState(false)
+  const [showComparison, setShowComparison] = useState(false)
   
   // System Prompts
   const [systemPrompts, setSystemPrompts] = useState([])
@@ -1992,6 +2000,57 @@ function RequirementsConstructor({ onNavigateBack, loadedPrompt, onPromptSaved }
     }
   }
 
+  // Handle AI refinement
+  const handleRefinePrompt = async () => {
+    const promptToRefine = displayPrompt.trim()
+    
+    if (!promptToRefine || promptToRefine === 'No requirements specified yet. Fill in the form to generate a prompt.') {
+      showToast('Please generate a prompt before refining', 'error')
+      return
+    }
+
+    try {
+      setIsRefining(true)
+      
+      const response = await fetch(`${API_BASE}/refine`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ prompt: promptToRefine }),
+      })
+
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.error || 'Failed to refine prompt')
+      }
+
+      const data = await response.json()
+      setRefinedPrompt(data.refined)
+      setShowComparison(true)
+      showToast('Prompt refined successfully!', 'success')
+    } catch (err) {
+      showToast(err.message || 'Failed to refine prompt', 'error')
+      console.error('Refinement error:', err)
+    } finally {
+      setIsRefining(false)
+    }
+  }
+
+  // Use refined prompt
+  const handleUseRefined = () => {
+    if (refinedPrompt) {
+      setEditedPrompt(refinedPrompt)
+      setIsEditing(true)
+      setShowComparison(false)
+      showToast('Refined prompt applied!', 'success')
+    }
+  }
+
+  // Close comparison view
+  const handleCloseComparison = () => {
+    setShowComparison(false)
+    setRefinedPrompt(null)
+  }
+
   const toggleSystemPrompt = (item) => {
     setSystemPrompts(prev => 
       prev.includes(item) 
@@ -3481,50 +3540,109 @@ function RequirementsConstructor({ onNavigateBack, loadedPrompt, onPromptSaved }
               )}
             </div>
             <div className="preview-header-actions">
-              {isEditing && (
+              {!showComparison && (
+                <>
+                  {isEditing && (
+                    <button
+                      className="btn-reset-prompt"
+                      onClick={handleResetToAuto}
+                      title="Reset to auto-generated"
+                    >
+                      <RotateCcw size={16} />
+                      Reset
+                    </button>
+                  )}
+                  <button
+                    className="btn-refine-prompt"
+                    onClick={handleRefinePrompt}
+                    disabled={isRefining || !displayPrompt.trim() || displayPrompt === 'No requirements specified yet. Fill in the form to generate a prompt.'}
+                    title="Refine prompt with AI"
+                    style={{
+                      background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                      color: 'white',
+                      border: 'none',
+                      padding: '8px 16px',
+                      borderRadius: '6px',
+                      cursor: isRefining || !displayPrompt.trim() || displayPrompt === 'No requirements specified yet. Fill in the form to generate a prompt.' ? 'not-allowed' : 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '6px',
+                      fontSize: '14px',
+                      fontWeight: '500',
+                      opacity: isRefining || !displayPrompt.trim() || displayPrompt === 'No requirements specified yet. Fill in the form to generate a prompt.' ? 0.6 : 1,
+                      transition: 'opacity 0.2s'
+                    }}
+                  >
+                    {isRefining ? (
+                      <>
+                        <Loader2 size={16} className="spin" />
+                        Refining...
+                      </>
+                    ) : (
+                      <>
+                        <Wand2 size={16} />
+                        Refine with AI
+                      </>
+                    )}
+                  </button>
+                  <button
+                    className="btn-toggle-edit"
+                    onClick={handleToggleEdit}
+                    title={isEditing ? "View auto-generated" : "Edit prompt"}
+                  >
+                    {isEditing ? <Eye size={16} /> : <Pencil size={16} />}
+                    {isEditing ? 'View Auto' : 'Edit'}
+                  </button>
+                  <button
+                    className="btn-copy-prompt"
+                    onClick={handleCopy}
+                    title="Copy to clipboard"
+                  >
+                    {copied ? <Check size={16} /> : <Copy size={16} />}
+                    {copied ? 'Copied!' : 'Copy'}
+                  </button>
+                  <button
+                    className="btn-save-prompt"
+                    onClick={handleSaveToLibrary}
+                    disabled={saving || !displayPrompt.trim() || displayPrompt === 'No requirements specified yet. Fill in the form to generate a prompt.'}
+                    title={hasLoadedPrompt && saveMode === 'update' ? 'Update existing prompt' : 'Save as new prompt'}
+                  >
+                    {saving ? (
+                      <>
+                        <Loader2 size={16} className="spin" />
+                        {hasLoadedPrompt && saveMode === 'update' ? 'Updating...' : 'Saving...'}
+                      </>
+                    ) : (
+                      <>
+                        <Save size={16} />
+                        {hasLoadedPrompt && saveMode === 'update' ? 'Update' : 'Save'}
+                      </>
+                    )}
+                  </button>
+                </>
+              )}
+              {showComparison && (
                 <button
-                  className="btn-reset-prompt"
-                  onClick={handleResetToAuto}
-                  title="Reset to auto-generated"
+                  className="btn-close-comparison"
+                  onClick={handleCloseComparison}
+                  title="Close comparison"
+                  style={{
+                    background: 'transparent',
+                    border: '1px solid var(--border-primary)',
+                    padding: '8px 16px',
+                    borderRadius: '6px',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '6px',
+                    fontSize: '14px',
+                    color: 'var(--text-primary)'
+                  }}
                 >
-                  <RotateCcw size={16} />
-                  Reset
+                  <XCircle size={16} />
+                  Close
                 </button>
               )}
-              <button
-                className="btn-toggle-edit"
-                onClick={handleToggleEdit}
-                title={isEditing ? "View auto-generated" : "Edit prompt"}
-              >
-                {isEditing ? <Eye size={16} /> : <Pencil size={16} />}
-                {isEditing ? 'View Auto' : 'Edit'}
-              </button>
-              <button
-                className="btn-copy-prompt"
-                onClick={handleCopy}
-                title="Copy to clipboard"
-              >
-                {copied ? <Check size={16} /> : <Copy size={16} />}
-                {copied ? 'Copied!' : 'Copy'}
-              </button>
-              <button
-                className="btn-save-prompt"
-                onClick={handleSaveToLibrary}
-                disabled={saving || !displayPrompt.trim() || displayPrompt === 'No requirements specified yet. Fill in the form to generate a prompt.'}
-                title={hasLoadedPrompt && saveMode === 'update' ? 'Update existing prompt' : 'Save as new prompt'}
-              >
-                {saving ? (
-                  <>
-                    <Loader2 size={16} className="spin" />
-                    {hasLoadedPrompt && saveMode === 'update' ? 'Updating...' : 'Saving...'}
-                  </>
-                ) : (
-                  <>
-                    <Save size={16} />
-                    {hasLoadedPrompt && saveMode === 'update' ? 'Update' : 'Save'}
-                  </>
-                )}
-              </button>
             </div>
           </div>
           
@@ -3582,16 +3700,131 @@ function RequirementsConstructor({ onNavigateBack, loadedPrompt, onPromptSaved }
           </div>
           
           <div className="preview-content">
-            {isEditing ? (
-              <textarea
-                className="prompt-editor"
-                value={editedPrompt}
-                onChange={handlePromptChange}
-                placeholder="Edit the prompt and add additional context..."
-                spellCheck={false}
-              />
+            {showComparison && refinedPrompt ? (
+              <div style={{ 
+                display: 'flex', 
+                height: '100%',
+                gap: '16px',
+                flexDirection: 'column'
+              }}>
+                <div style={{
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                  padding: '12px 16px',
+                  borderBottom: '1px solid var(--border-primary)',
+                  background: 'var(--bg-secondary)'
+                }}>
+                  <h3 style={{ margin: 0, fontSize: '16px', fontWeight: '600' }}>Side-by-Side Comparison</h3>
+                  <button
+                    onClick={handleUseRefined}
+                    style={{
+                      background: 'var(--accent-primary)',
+                      color: 'white',
+                      border: 'none',
+                      padding: '8px 16px',
+                      borderRadius: '6px',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '6px',
+                      fontSize: '14px',
+                      fontWeight: '500'
+                    }}
+                  >
+                    <ArrowRight size={16} />
+                    Use Refined Version
+                  </button>
+                </div>
+                <div style={{
+                  display: 'flex',
+                  flex: 1,
+                  gap: '16px',
+                  overflow: 'hidden',
+                  padding: '16px'
+                }}>
+                  <div style={{
+                    flex: 1,
+                    display: 'flex',
+                    flexDirection: 'column',
+                    border: '1px solid var(--border-primary)',
+                    borderRadius: '8px',
+                    overflow: 'hidden',
+                    background: 'var(--bg-primary)'
+                  }}>
+                    <div style={{
+                      padding: '12px 16px',
+                      borderBottom: '1px solid var(--border-primary)',
+                      background: 'var(--bg-secondary)',
+                      fontWeight: '600',
+                      fontSize: '14px'
+                    }}>
+                      Original Prompt
+                    </div>
+                    <pre style={{
+                      flex: 1,
+                      margin: 0,
+                      padding: '16px',
+                      overflow: 'auto',
+                      fontSize: '13px',
+                      lineHeight: '1.6',
+                      whiteSpace: 'pre-wrap',
+                      wordWrap: 'break-word',
+                      fontFamily: 'inherit'
+                    }}>{displayPrompt}</pre>
+                  </div>
+                  <div style={{
+                    flex: 1,
+                    display: 'flex',
+                    flexDirection: 'column',
+                    border: '1px solid var(--border-primary)',
+                    borderRadius: '8px',
+                    overflow: 'hidden',
+                    background: 'var(--bg-primary)',
+                    borderColor: '#667eea'
+                  }}>
+                    <div style={{
+                      padding: '12px 16px',
+                      borderBottom: '1px solid var(--border-primary)',
+                      background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                      color: 'white',
+                      fontWeight: '600',
+                      fontSize: '14px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '8px'
+                    }}>
+                      <Wand2 size={16} />
+                      AI Refined Prompt
+                    </div>
+                    <pre style={{
+                      flex: 1,
+                      margin: 0,
+                      padding: '16px',
+                      overflow: 'auto',
+                      fontSize: '13px',
+                      lineHeight: '1.6',
+                      whiteSpace: 'pre-wrap',
+                      wordWrap: 'break-word',
+                      fontFamily: 'inherit'
+                    }}>{refinedPrompt}</pre>
+                  </div>
+                </div>
+              </div>
             ) : (
-              <pre className="prompt-preview">{displayPrompt}</pre>
+              <>
+                {isEditing ? (
+                  <textarea
+                    className="prompt-editor"
+                    value={editedPrompt}
+                    onChange={handlePromptChange}
+                    placeholder="Edit the prompt and add additional context..."
+                    spellCheck={false}
+                  />
+                ) : (
+                  <pre className="prompt-preview">{displayPrompt}</pre>
+                )}
+              </>
             )}
           </div>
         </div>

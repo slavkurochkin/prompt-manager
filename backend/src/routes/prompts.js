@@ -7,8 +7,10 @@ const {
   updateRatingSchema,
   updateNoteSchema,
   updateTagsSchema,
-  idParamSchema
+  idParamSchema,
+  refinePromptSchema
 } = require('../validations/promptValidation');
+const { refinePrompt } = require('../services/promptRefinement');
 
 const router = express.Router();
 
@@ -164,6 +166,32 @@ router.delete('/:id', validate(idParamSchema, 'params'), async (req, res) => {
   } catch (error) {
     console.error('Error deleting prompt:', error);
     res.status(500).json({ error: 'Failed to delete prompt' });
+  }
+});
+
+// Refine a prompt using AI
+router.post('/refine', validate(refinePromptSchema), async (req, res) => {
+  try {
+    const { prompt } = req.body;
+    
+    const refinedPrompt = await refinePrompt(prompt);
+    
+    res.json({ 
+      original: prompt,
+      refined: refinedPrompt 
+    });
+  } catch (error) {
+    console.error('Error refining prompt:', error);
+    
+    if (error.message.includes('OPENAI_API_KEY')) {
+      return res.status(500).json({ 
+        error: 'OpenAI API key is not configured. Please set OPENAI_API_KEY in your .env file.' 
+      });
+    }
+    
+    res.status(500).json({ 
+      error: error.message || 'Failed to refine prompt' 
+    });
   }
 });
 

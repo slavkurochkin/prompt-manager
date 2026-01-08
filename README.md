@@ -12,6 +12,8 @@ A full-stack application for saving and managing your AI prompts. Built with Rea
 
 - **Create Prompts**: Add new prompts with a title and content
 - **View All Prompts**: See all your saved prompts in a clean grid layout
+- **AI Prompt Refinement**: Use LangChain and OpenAI to refine and improve your prompts
+- **Side-by-Side Comparison**: Compare original and AI-refined prompts side by side
 - **Copy to Clipboard**: One-click copy for any prompt
 - **Delete Prompts**: Remove prompts you no longer need
 - **Persistent Storage**: All data stored in PostgreSQL database
@@ -48,6 +50,7 @@ A full-stack application for saving and managing your AI prompts. Built with Rea
 
 - [Docker](https://www.docker.com/get-started) and Docker Compose installed
 - No other services running on ports 8080, 5173, 3001, or 5432
+- OpenAI API key (for AI prompt refinement feature)
 
 ### Running with Docker
 
@@ -56,7 +59,15 @@ A full-stack application for saving and managing your AI prompts. Built with Rea
    cd prompt-manager
    ```
 
-2. **Start all services:**
+2. **Set up environment variables:**
+   Create a `.env` file in the `backend/` directory with your OpenAI API key:
+   ```bash
+   cd backend
+   echo "OPENAI_API_KEY=your_openai_api_key_here" > .env
+   ```
+   Replace `your_openai_api_key_here` with your actual OpenAI API key.
+
+3. **Start all services:**
    ```bash
    docker-compose up --build
    ```
@@ -134,6 +145,7 @@ prompt-manager/
 | POST | `/api/prompts` | Create a new prompt |
 | PUT | `/api/prompts/:id` | Update a prompt |
 | DELETE | `/api/prompts/:id` | Delete a prompt |
+| POST | `/api/prompts/refine` | Refine a prompt using AI |
 | GET | `/health` | Health check endpoint |
 
 ### Example API Usage
@@ -161,7 +173,25 @@ curl -X DELETE http://localhost:8080/api/prompts/1
 - **Backend**: Node.js, Express.js
 - **Database**: PostgreSQL 15
 - **API Gateway**: Nginx
+- **AI/ML**: LangChain, OpenAI API
 - **Containerization**: Docker, Docker Compose
+
+## 🤖 AI Prompt Refinement
+
+The application includes an AI-powered prompt refinement feature powered by LangChain and OpenAI:
+
+1. **Generate or edit a prompt** using the Requirements Constructor
+2. **Click "Refine with AI"** button in the preview panel
+3. **Compare side-by-side** the original and refined versions
+4. **Use the refined version** if you prefer it, or continue editing
+
+The refinement process improves:
+- Clarity and specificity
+- Structure and organization
+- Context and detail
+- Professional language
+
+**Note**: You need to set up your OpenAI API key in `backend/.env` file for this feature to work.
 
 ## 📝 License
 

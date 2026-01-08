@@ -24,6 +24,8 @@ services:
       context: ./backend
       dockerfile: Dockerfile
     container_name: prompt-backend
+    env_file:
+      - ./backend/.env
     environment:
       NODE_ENV: production
       DATABASE_URL: postgres://promptuser:promptpass@postgres:5432/promptdb

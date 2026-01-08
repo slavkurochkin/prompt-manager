@@ -200,13 +200,27 @@ const idParamSchema = Joi.object({
     })
 });
 
+// Validation schema for refining a prompt
+const refinePromptSchema = Joi.object({
+  prompt: Joi.string()
+    .trim()
+    .min(1)
+    .required()
+    .messages({
+      'string.empty': 'Prompt is required',
+      'string.min': 'Prompt must be at least 1 character',
+      'any.required': 'Prompt is required'
+    })
+});
+
 module.exports = {
   createPromptSchema,
   updatePromptSchema,
   updateRatingSchema,
   updateNoteSchema,
   updateTagsSchema,
-  idParamSchema
+  idParamSchema,
+  refinePromptSchema
 };
 
 

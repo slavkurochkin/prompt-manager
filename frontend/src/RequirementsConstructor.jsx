@@ -559,6 +559,8 @@ function RequirementsConstructor({ onNavigateBack, loadedPrompt, onPromptSaved }
 
   // Track the last loaded prompt ID to prevent re-loading the same prompt
   const lastLoadedPromptId = useRef(null)
+  // Track if we just cleared a section to trigger prompt update
+  const justClearedRef = useRef(false)
   
   // Helper function to parse prompt content and extract field values
   const parsePromptContent = useCallback((content) => {
@@ -869,6 +871,143 @@ function RequirementsConstructor({ onNavigateBack, loadedPrompt, onPromptSaved }
       [section]: !prev[section]
     }))
   }
+
+  // Helper function to remove specific sections from the prompt
+  const removeSectionsFromPrompt = useCallback((prompt, sectionHeaders) => {
+    if (!prompt || !prompt.trim()) return prompt
+    
+    const sections = prompt.split(/\n\n(?=## )/g)
+    const filteredSections = sections.filter(section => {
+      const lines = section.split('\n')
+      const header = lines[0]?.trim()
+      if (header && header.startsWith('##')) {
+        // Check if this section header should be removed (exact match)
+        return !sectionHeaders.some(headerToRemove => header === headerToRemove)
+      }
+      // Keep non-section content
+      return true
+    })
+    
+    const result = filteredSections.length > 0 ? filteredSections.join('\n\n') : 'No requirements specified yet. Fill in the form to generate a prompt.'
+    return result
+  }, [])
+
+  // Clear functions for each section
+  const clearSystemPrompts = useCallback((e) => {
+    e.preventDefault()
+    e.stopPropagation()
+    setSystemPrompts([])
+    setCustomSystemPrompt('')
+    justClearedRef.current = true
+    // Directly remove the section from editedPrompt
+    setEditedPrompt(prev => removeSectionsFromPrompt(prev, ['## System Prompts']))
+    showToast('System Prompts cleared', 'success')
+  }, [showToast, removeSectionsFromPrompt])
+
+  const clearTechnicalArchitecture = useCallback((e) => {
+    e.preventDefault()
+    e.stopPropagation()
+    setFrontendFramework('')
+    setCustomFrontend('')
+    setBackendFramework('')
+    setCustomBackend('')
+    setDatabase('')
+    setCustomDatabase('')
+    setDatabaseMigrations('')
+    setCustomDatabaseMigrations('')
+    setMessaging('')
+    setCustomMessaging('')
+    setCachingStrategy([])
+    setCustomCachingStrategy('')
+    setApiGateway('')
+    setCustomApiGateway('')
+    setApiContracts('')
+    setCustomApiContracts('')
+    setTestingFramework('')
+    setCustomTesting('')
+    setApiTesting('')
+    setCustomApiTesting('')
+    setApiTestingOptions([])
+    setCustomApiTestingOptions('')
+    setAiFramework('')
+    setCustomAiFramework('')
+    setAiFrameworkOptions([])
+    setCustomAiFrameworkOptions('')
+    setVectorDatabase('')
+    setCustomVectorDatabase('')
+    setAiTesting('')
+    setCustomAiTesting('')
+    setAiTestingOptions([])
+    setCustomAiTestingOptions('')
+    setDockerEnv([])
+    setCustomDockerEnv('')
+    setObservability('')
+    setCustomObservability('')
+    setObservabilityOptions([])
+    setCustomObservabilityOptions('')
+    setSecurityDefaults([])
+    setCustomSecurity('')
+    setFailureFirst([])
+    setCustomFailureFirst('')
+    setTestingPhilosophy([])
+    setCustomTestingPhilosophy('')
+    setModelValidation('')
+    setCustomModelValidation('')
+    setChartLibrary('')
+    setCustomChartLibrary('')
+    justClearedRef.current = true
+    // Directly remove the section from editedPrompt
+    setEditedPrompt(prev => removeSectionsFromPrompt(prev, ['## Technical Architecture']))
+    showToast('Technical Architecture cleared', 'success')
+  }, [showToast, removeSectionsFromPrompt])
+
+  const clearDesignStyles = useCallback((e) => {
+    e.preventDefault()
+    e.stopPropagation()
+    setDesignStyles([])
+    setCustomDesignStyle('')
+    setIconLibrary('')
+    setCustomIconLibrary('')
+    setUiFramework('')
+    setCustomUiFramework('')
+    justClearedRef.current = true
+    // Directly remove the section from editedPrompt
+    setEditedPrompt(prev => removeSectionsFromPrompt(prev, ['## Design Styles']))
+    showToast('Design Styles cleared', 'success')
+  }, [showToast, removeSectionsFromPrompt])
+
+  const clearProductRequirements = useCallback((e) => {
+    e.preventDefault()
+    e.stopPropagation()
+    setProductRequirements('')
+    setAcceptanceCriteria('')
+    setUserStories('')
+    justClearedRef.current = true
+    // Directly remove the sections from editedPrompt
+    setEditedPrompt(prev => removeSectionsFromPrompt(prev, ['## Product Requirements', '## Acceptance Criteria', '## User Stories']))
+    showToast('Product Requirements cleared', 'success')
+  }, [showToast, removeSectionsFromPrompt])
+
+  const clearBusinessRules = useCallback((e) => {
+    e.preventDefault()
+    e.stopPropagation()
+    setBusinessRules('')
+    justClearedRef.current = true
+    // Directly remove the section from editedPrompt
+    setEditedPrompt(prev => removeSectionsFromPrompt(prev, ['## Business Rules']))
+    showToast('Business Rules cleared', 'success')
+  }, [showToast, removeSectionsFromPrompt])
+
+  const clearAdditionalRequirements = useCallback((e) => {
+    e.preventDefault()
+    e.stopPropagation()
+    setNonFunctionalRequirements('')
+    setAdditionalRequirements('')
+    justClearedRef.current = true
+    // Directly remove the sections from editedPrompt
+    setEditedPrompt(prev => removeSectionsFromPrompt(prev, ['## Non-Functional Requirements', '## Additional Requirements']))
+    showToast('Additional Requirements cleared', 'success')
+  }, [showToast, removeSectionsFromPrompt])
 
   // Get compatible options based on selected backend framework
   const getCompatibleOptions = (category) => {
@@ -1717,7 +1856,15 @@ function RequirementsConstructor({ onNavigateBack, loadedPrompt, onPromptSaved }
   // Allow merging even with loaded prompts so form changes are reflected
   useEffect(() => {
     // Process if auto-generated prompt actually changed (including when it becomes empty/default)
-    if (autoGeneratedPrompt !== lastAutoGenerated) {
+    if (autoGeneratedPrompt !== lastAutoGenerated || justClearedRef.current) {
+      if (justClearedRef.current) {
+        // If we just cleared, we've already updated editedPrompt directly
+        // Just update lastAutoGenerated to match the new state
+        justClearedRef.current = false
+        setLastAutoGenerated(autoGeneratedPrompt)
+        return
+      }
+      
       if (isEditing) {
         // In edit mode, merge new auto-generated content intelligently
         // This works for both loaded prompts and new prompts
@@ -1961,11 +2108,35 @@ function RequirementsConstructor({ onNavigateBack, loadedPrompt, onPromptSaved }
               >
                 <Sparkles size={18} />
                 <h2>System Prompts</h2>
-                {expandedSections.systemPrompts ? (
-                  <ChevronDown size={18} />
-                ) : (
-                  <ChevronRight size={18} />
-                )}
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginLeft: 'auto' }}>
+                  {(systemPrompts.length > 0 || (customSystemPrompt && customSystemPrompt.trim())) && (
+                    <button
+                      type="button"
+                      onClick={clearSystemPrompts}
+                      onMouseDown={(e) => e.stopPropagation()}
+                      style={{
+                        background: 'transparent',
+                        border: 'none',
+                        cursor: 'pointer',
+                        padding: '4px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        color: '#666',
+                        fontSize: '12px',
+                        gap: '4px'
+                      }}
+                      title="Clear all"
+                    >
+                      <X size={14} />
+                      <span>Clear</span>
+                    </button>
+                  )}
+                  {expandedSections.systemPrompts ? (
+                    <ChevronDown size={18} />
+                  ) : (
+                    <ChevronRight size={18} />
+                  )}
+                </div>
               </div>
 
               {expandedSections.systemPrompts && (
@@ -2006,11 +2177,35 @@ function RequirementsConstructor({ onNavigateBack, loadedPrompt, onPromptSaved }
               >
                 <Settings size={18} />
                 <h2>Technical Architecture</h2>
-                {expandedSections.technicalArchitecture ? (
-                  <ChevronDown size={18} />
-                ) : (
-                  <ChevronRight size={18} />
-                )}
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginLeft: 'auto' }}>
+                  {(frontendFramework || customFrontend || backendFramework || customBackend || database || customDatabase || databaseMigrations || customDatabaseMigrations || messaging || customMessaging || cachingStrategy.length > 0 || customCachingStrategy || apiGateway || customApiGateway || apiContracts || customApiContracts || testingFramework || customTesting || apiTesting || customApiTesting || apiTestingOptions.length > 0 || customApiTestingOptions || aiFramework || customAiFramework || aiFrameworkOptions.length > 0 || customAiFrameworkOptions || vectorDatabase || customVectorDatabase || aiTesting || customAiTesting || aiTestingOptions.length > 0 || customAiTestingOptions || dockerEnv.length > 0 || customDockerEnv || observability || customObservability || observabilityOptions.length > 0 || customObservabilityOptions || securityDefaults.length > 0 || customSecurity || failureFirst.length > 0 || customFailureFirst || testingPhilosophy.length > 0 || customTestingPhilosophy || modelValidation || customModelValidation || chartLibrary || customChartLibrary) && (
+                    <button
+                      type="button"
+                      onClick={clearTechnicalArchitecture}
+                      onMouseDown={(e) => e.stopPropagation()}
+                      style={{
+                        background: 'transparent',
+                        border: 'none',
+                        cursor: 'pointer',
+                        padding: '4px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        color: '#666',
+                        fontSize: '12px',
+                        gap: '4px'
+                      }}
+                      title="Clear all"
+                    >
+                      <X size={14} />
+                      <span>Clear</span>
+                    </button>
+                  )}
+                  {expandedSections.technicalArchitecture ? (
+                    <ChevronDown size={18} />
+                  ) : (
+                    <ChevronRight size={18} />
+                  )}
+                </div>
               </div>
 
               {expandedSections.technicalArchitecture && (
@@ -2921,11 +3116,35 @@ function RequirementsConstructor({ onNavigateBack, loadedPrompt, onPromptSaved }
               >
                 <Palette size={18} />
                 <h2>Design Styles</h2>
-                {expandedSections.designStyles ? (
-                  <ChevronDown size={18} />
-                ) : (
-                  <ChevronRight size={18} />
-                )}
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginLeft: 'auto' }}>
+                  {(designStyles.length > 0 || (customDesignStyle && customDesignStyle.trim()) || iconLibrary || (customIconLibrary && customIconLibrary.trim()) || uiFramework || (customUiFramework && customUiFramework.trim())) && (
+                    <button
+                      type="button"
+                      onClick={clearDesignStyles}
+                      onMouseDown={(e) => e.stopPropagation()}
+                      style={{
+                        background: 'transparent',
+                        border: 'none',
+                        cursor: 'pointer',
+                        padding: '4px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        color: '#666',
+                        fontSize: '12px',
+                        gap: '4px'
+                      }}
+                      title="Clear all"
+                    >
+                      <X size={14} />
+                      <span>Clear</span>
+                    </button>
+                  )}
+                  {expandedSections.designStyles ? (
+                    <ChevronDown size={18} />
+                  ) : (
+                    <ChevronRight size={18} />
+                  )}
+                </div>
               </div>
               
               {expandedSections.designStyles && (
@@ -3058,11 +3277,35 @@ function RequirementsConstructor({ onNavigateBack, loadedPrompt, onPromptSaved }
               >
                 <FileText size={18} />
                 <h2>Product Requirements</h2>
-                {expandedSections.productRequirements ? (
-                  <ChevronDown size={18} />
-                ) : (
-                  <ChevronRight size={18} />
-                )}
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginLeft: 'auto' }}>
+                  {((productRequirements && productRequirements.trim()) || (acceptanceCriteria && acceptanceCriteria.trim()) || (userStories && userStories.trim())) && (
+                    <button
+                      type="button"
+                      onClick={clearProductRequirements}
+                      onMouseDown={(e) => e.stopPropagation()}
+                      style={{
+                        background: 'transparent',
+                        border: 'none',
+                        cursor: 'pointer',
+                        padding: '4px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        color: '#666',
+                        fontSize: '12px',
+                        gap: '4px'
+                      }}
+                      title="Clear all"
+                    >
+                      <X size={14} />
+                      <span>Clear</span>
+                    </button>
+                  )}
+                  {expandedSections.productRequirements ? (
+                    <ChevronDown size={18} />
+                  ) : (
+                    <ChevronRight size={18} />
+                  )}
+                </div>
               </div>
               
               {expandedSections.productRequirements && (
@@ -3112,11 +3355,35 @@ function RequirementsConstructor({ onNavigateBack, loadedPrompt, onPromptSaved }
               >
                 <Building2 size={18} />
                 <h2>Business Rules</h2>
-                {expandedSections.businessRules ? (
-                  <ChevronDown size={18} />
-                ) : (
-                  <ChevronRight size={18} />
-                )}
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginLeft: 'auto' }}>
+                  {(businessRules && businessRules.trim()) && (
+                    <button
+                      type="button"
+                      onClick={clearBusinessRules}
+                      onMouseDown={(e) => e.stopPropagation()}
+                      style={{
+                        background: 'transparent',
+                        border: 'none',
+                        cursor: 'pointer',
+                        padding: '4px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        color: '#666',
+                        fontSize: '12px',
+                        gap: '4px'
+                      }}
+                      title="Clear all"
+                    >
+                      <X size={14} />
+                      <span>Clear</span>
+                    </button>
+                  )}
+                  {expandedSections.businessRules ? (
+                    <ChevronDown size={18} />
+                  ) : (
+                    <ChevronRight size={18} />
+                  )}
+                </div>
               </div>
               {expandedSections.businessRules && (
                 <div className="form-group">
@@ -3140,11 +3407,35 @@ function RequirementsConstructor({ onNavigateBack, loadedPrompt, onPromptSaved }
               >
                 <FileText size={18} />
                 <h2>Additional Requirements</h2>
-                {expandedSections.additionalRequirements ? (
-                  <ChevronDown size={18} />
-                ) : (
-                  <ChevronRight size={18} />
-                )}
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginLeft: 'auto' }}>
+                  {((nonFunctionalRequirements && nonFunctionalRequirements.trim()) || (additionalRequirements && additionalRequirements.trim())) && (
+                    <button
+                      type="button"
+                      onClick={clearAdditionalRequirements}
+                      onMouseDown={(e) => e.stopPropagation()}
+                      style={{
+                        background: 'transparent',
+                        border: 'none',
+                        cursor: 'pointer',
+                        padding: '4px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        color: '#666',
+                        fontSize: '12px',
+                        gap: '4px'
+                      }}
+                      title="Clear all"
+                    >
+                      <X size={14} />
+                      <span>Clear</span>
+                    </button>
+                  )}
+                  {expandedSections.additionalRequirements ? (
+                    <ChevronDown size={18} />
+                  ) : (
+                    <ChevronRight size={18} />
+                  )}
+                </div>
               </div>
               
               {expandedSections.additionalRequirements && (

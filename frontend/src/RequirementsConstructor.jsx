@@ -322,33 +322,33 @@ const VALIDATION_LIBRARIES = [
 
 // Additional complementary options
 const API_TESTING_OPTIONS = [
-  'Prefer OpenAPI-driven API tests.',
-  'Curl examples must be runnable.',
-  'Axios or curl-based tests are acceptable if they map cleanly to Postman collections.'
+  'Prefer OpenAPI-driven API tests',
+  'Curl examples must be runnable',
+  'Axios or curl-based tests are acceptable if they map cleanly to Postman collections'
 ]
 
 const AI_FRAMEWORK_OPTIONS = [
-  'Use LangChain for AI features.',
-  'Allowed: prompt templates, chains, tool calling.',
-  'Avoid autonomous agents unless explicitly requested.',
-  'Isolate AI logic behind clear service boundaries.',
-  'Prompts must be versioned.',
-  'Provide offline / mock mode for tests.',
-  'Do not call real LLMs in CI by default.',
-  'Ask before adding new mock frameworks or prompt-evaluation strategies.'
+  'Use LangChain for AI features',
+  'Allowed: prompt templates, chains, tool calling',
+  'Avoid autonomous agents unless explicitly requested',
+  'Isolate AI logic behind clear service boundaries',
+  'Prompts must be versioned',
+  'Provide offline / mock mode for tests',
+  'Do not call real LLMs in CI by default',
+  'Ask before adding new mock frameworks or prompt-evaluation strategies'
 ]
 
 const AI_TESTING_OPTIONS = [
-  'Mock LLM calls by default.',
-  'Validate structure, schema, and contracts rather than exact text.',
-  'Explicitly test timeout and degraded-response scenarios.'
+  'Mock LLM calls by default',
+  'Validate structure, schema, and contracts rather than exact text',
+  'Explicitly test timeout and degraded-response scenarios'
 ]
 
 const OBSERVABILITY_OPTIONS = [
-  'Structured JSON logging.',
-  'Request ID propagation across services.',
-  'Metrics endpoint required.',
-  'Health check endpoints required.'
+  'Structured JSON logging',
+  'Request ID propagation across services',
+  'Metrics endpoint required',
+  'Health check endpoints required'
 ]
 
 const SECURITY_DEFAULTS = [
@@ -376,22 +376,22 @@ const FAILURE_FIRST_OPTIONS = [
 ]
 
 const TESTING_PHILOSOPHY_OPTIONS = [
-  'Focus on E2E testing only.',
-  'Generate Playwright tests for user-facing behavior changes.',
-  'Ask before generating tests when impact is unclear.',
-  'When implementing features, reason through how tests validate correctness.',
-  'Add negative tests and explicitly test failure paths.',
-  'Simulate partial outages where relevant (e.g., downstream service failure, LLM timeout).',
-  'Cursor should verify its own work by reasoning through how Playwright tests would pass or fail.'
+  'Focus on E2E testing only',
+  'Generate Playwright tests for user-facing behavior changes',
+  'Ask before generating tests when impact is unclear',
+  'When implementing features, reason through how tests validate correctness',
+  'Add negative tests and explicitly test failure paths',
+  'Simulate partial outages where relevant (e.g., downstream service failure, LLM timeout)',
+  'Cursor should verify its own work by reasoning through how Playwright tests would pass or fail'
 ]
 
 const DOCKER_ENV_OPTIONS = [
-  'Docker-first development.',
-  'Use docker-compose for local environments.',
-  'Local Postgres runs via Docker Compose.',
-  'Schema changes require migrations.',
-  'Use `.env` files with validation.',
-  'Never hardcode secrets.'
+  'Docker-first development',
+  'Use docker-compose for local environments',
+  'Local Postgres runs via Docker Compose',
+  'Schema changes require migrations',
+  'Use `.env` files with validation',
+  'Never hardcode secrets'
 ]
 
 const DESIGN_STYLES = [
